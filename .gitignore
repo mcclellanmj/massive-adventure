@@ -1,7 +1,4 @@
+target
 .classpath
 .project
-.cache
-target
-lib
 .settings
-build
