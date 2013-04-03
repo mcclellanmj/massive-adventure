@@ -5,5 +5,5 @@ import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.InputProcessor
 
 trait MappedInputProcessor extends InputProcessor {
-	var game : GameListener
+	var game : UserInputListener
 }

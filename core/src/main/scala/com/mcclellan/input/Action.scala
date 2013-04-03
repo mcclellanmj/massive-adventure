@@ -1,6 +1,5 @@
 package com.mcclellan.input
-
-abstract case class Action {
+sealed trait Action {
 	def stop : Boolean
 }
 

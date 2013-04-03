@@ -1,5 +1,5 @@
 package com.mcclellan.input
 
-trait GameListener {
+trait UserInputListener {
 	def userAction(userAction : Action)
 }
