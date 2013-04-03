@@ -35,12 +35,12 @@ class DesktopInput extends MappedInputProcessor {
 			game.userAction(Down(true))
 		} else println(keycode)
 	}
-	def keyTyped(character : Char) : Boolean = println("Char " + character)
+	def keyTyped(character : Char) : Boolean = true
 
 	def touchDown(screenX : Int, screenY : Int, pointer : Int, button : Int) : Boolean = true
 	def touchUp(screenX : Int, screenY : Int, pointer : Int, button : Int) : Boolean = true
 	def touchDragged(screenX : Int, screenY : Int, pointer : Int) : Boolean = true
 
-	def mouseMoved(screenX : Int, screenY : Int) : Boolean = true
+	def mouseMoved(screenX : Int, screenY : Int) : Boolean = println(screenX, screenY)
 	def scrolled(amount : Int) : Boolean = true
 }
