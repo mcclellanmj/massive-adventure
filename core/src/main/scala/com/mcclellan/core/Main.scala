@@ -30,10 +30,11 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		processor.game = this;
 	}
 
-	override def resize(width : Int, height : Int) = {
-
+	private def update(elapsed : Float) = {
+		y += (velocityUp * elapsed)
+		x += (velocityRight * elapsed)
 	}
-
+	
 	override def render = {
 		val font = new BitmapFont
 		update(Gdx.graphics.getDeltaTime)
@@ -45,22 +46,10 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		batch.end
 	}
 
-	override def pause = {
-
-	}
-
-	override def resume = {
-
-	}
-
-	override def dispose = {
-
-	}
-
-	def update(elapsed : Float) = {
-		y += (velocityUp * elapsed)
-		x += (velocityRight * elapsed)
-	}
+	override def resize(width : Int, height : Int) = Unit
+	override def pause = Unit
+	override def resume = Unit
+	override def dispose = Unit
 
 	override def userAction(action : Action) = {
 		println(action)
