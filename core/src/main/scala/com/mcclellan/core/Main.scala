@@ -40,6 +40,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		update(Gdx.graphics.getDeltaTime)
 		Gdx.gl.glClearColor(0, 0, 0, 0)
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT)
+		
 		batch.begin
 		font.draw(batch, String.valueOf(Gdx.graphics.getFramesPerSecond), 10, Gdx.graphics.getHeight - 20)
 		batch.draw(texture, x, y)
