@@ -13,25 +13,30 @@ import com.mcclellan.input.actions._
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.mcclellan.core.model.Player
 import com.mcclellan.core.math.Vector2
+import com.badlogic.gdx.graphics.g2d.Sprite
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	import language.implicitConversions
 	implicit def booleanToInt(b : Boolean) = if (b) 1 else -1
 
-	var texture : Texture = null
+	var texture : Sprite = null
 	var batch : SpriteBatch = null
 	val player = new Player(new Vector2(0f, 0f))
 	var direction = new Vector2(0f, 0f)
+	var target = new Vector2(0f, 0f)
+	var angle = 0f
 
 	override def create = {
-		texture = new Texture(Gdx.files.classpath("Man.png"));
+		texture = new Sprite(new Texture(Gdx.files.classpath("Man.png")))
 		batch = new SpriteBatch
 		Gdx.input.setInputProcessor(processor)
 		processor.game = this;
 	}
 
 	private def update(elapsed : Float) = {
-	  player.position += (direction * 150) * elapsed
+	  player.position += (direction.unit.toFloat * 600) * elapsed
+	  val diff = target - player.position
+	  angle = Math.toDegrees(Math.atan2(-diff.toDouble.x, diff.toDouble.y)).toFloat
 	}
 	
 	override def render = {
@@ -42,7 +47,9 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		
 		batch.begin
 		font.draw(batch, String.valueOf(Gdx.graphics.getFramesPerSecond), 10, Gdx.graphics.getHeight - 20)
-		batch.draw(texture, player.position.x, player.position.y)
+		texture.setPosition(player.position.x - texture.getWidth()/2, player.position.y - texture.getHeight()/2)
+		texture.setRotation(angle)
+		texture.draw(batch)
 		batch.end
 	}
 
@@ -57,6 +64,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 			case Up(s) => direction += new Vector2(0, 1 * !s)
 			case Left(s) => direction += new Vector2(-1 * !s, 0)
 			case Right(s) => direction += new Vector2(1 * !s,0)
+			case AimAt(point) => target = new Vector2(point.x, Gdx.graphics.getHeight() - point.y)
 		}
 	}
 }

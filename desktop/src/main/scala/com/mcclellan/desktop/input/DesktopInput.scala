@@ -3,6 +3,7 @@ package com.mcclellan.desktop.input
 import com.mcclellan.input.actions._
 import com.mcclellan.input.MappedInputProcessor
 import com.mcclellan.input.UserInputListener
+import com.mcclellan.core.math.Vector2
 
 class DesktopInput extends MappedInputProcessor {
 	import language.implicitConversions
@@ -41,6 +42,6 @@ class DesktopInput extends MappedInputProcessor {
 	def touchUp(screenX : Int, screenY : Int, pointer : Int, button : Int) : Boolean = true
 	def touchDragged(screenX : Int, screenY : Int, pointer : Int) : Boolean = true
 
-	def mouseMoved(screenX : Int, screenY : Int) : Boolean = println(screenX, screenY)
+	def mouseMoved(screenX : Int, screenY : Int) : Boolean = game.userAction(AimAt(new Vector2(screenX, screenY)))
 	def scrolled(amount : Int) : Boolean = true
 }

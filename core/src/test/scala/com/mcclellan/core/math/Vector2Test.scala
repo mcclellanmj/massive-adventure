@@ -75,7 +75,7 @@ class Vector2Test extends FunSpec {
 		it("should compute return 0 for orthogonal") {
 			val vec1 = new Vector2(35, 14000)
 			val vec2 = vec1.unit
-			val dot = vec1.toDouble*vec2
+			val dot = vec1.toFloat*vec2
 			val preAngle = dot / (vec1.magnitude * vec2.magnitude)
 			val angle = Math.acos(if(preAngle > 1) 1 else preAngle)
 			assert(Math.toDegrees(angle) === 0)

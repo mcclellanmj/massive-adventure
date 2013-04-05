@@ -8,9 +8,12 @@ class Vector2[T : Numeric](val x : T, val y : T) {
 	def *(vector : Vector2[T]) = x*vector.x + y*vector.y
 	lazy val unary_- = new Vector2[T](-this.x, -this.y)
 
-	lazy val magnitude = Math.sqrt((x*x + y*y).toDouble)
+	lazy val magnitude = Math.sqrt((x*x + y*y).toDouble).toFloat
 	lazy val angle = Math.atan(y.toDouble/x.toDouble)
-	lazy val unit = new Vector2[Double](x.toDouble/magnitude, y.toDouble/magnitude)
+	lazy val unit = {
+		if(y == 0) new Vector2[Float](x.toFloat, 0)
+		else new Vector2[Float](x.toFloat/magnitude.toFloat, y.toFloat/magnitude.toFloat)
+	}
 	
 	lazy val toDouble = new Vector2[Double](x.toDouble, y.toDouble)
 	lazy val toFloat = new Vector2[Float](x.toFloat, y.toFloat)
@@ -21,4 +24,6 @@ class Vector2[T : Numeric](val x : T, val y : T) {
 		case vec:Vector2[_] => x == vec.x && y == vec.y
 		case _ => false
 	}
+	
+	override def toString = "(" + x + "," + y + ")"
 }
