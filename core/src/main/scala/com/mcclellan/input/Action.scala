@@ -10,4 +10,5 @@ package actions {
 	case class Right(val stop : Boolean) extends Action
 	case class Down(val stop : Boolean) extends Action
 	case class AimAt(point : Vector2[Float]) extends Action
+	case class Fire(val stop : Boolean) extends Action
 }

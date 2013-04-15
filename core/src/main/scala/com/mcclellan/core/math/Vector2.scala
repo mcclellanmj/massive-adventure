@@ -9,7 +9,7 @@ class Vector2[T : Numeric](val x : T, val y : T) {
 	lazy val unary_- = new Vector2[T](-this.x, -this.y)
 
 	lazy val magnitude = Math.sqrt((x*x + y*y).toDouble).toFloat
-	lazy val angle = Math.atan(y.toDouble/x.toDouble)
+	lazy val angle = Math.atan2(x.toDouble, y.toDouble)
 	lazy val unit = {
 		if(y == 0) new Vector2[Float](x.toFloat, 0)
 		else new Vector2[Float](x.toFloat/magnitude.toFloat, y.toFloat/magnitude.toFloat)
