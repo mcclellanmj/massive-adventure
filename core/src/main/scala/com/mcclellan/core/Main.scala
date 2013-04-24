@@ -16,6 +16,9 @@ import com.mcclellan.core.math.Vector2
 import com.badlogic.gdx.graphics.g2d.Sprite
 import com.mcclellan.core.model.Projectile
 import com.mcclellan.core.model.Projectile
+import com.badlogic.gdx.physics.box2d.World
+import com.badlogic.gdx.math.{Vector2 => GdxVector}
+import com.badlogic.gdx.physics.box2d.BodyDef
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	import language.implicitConversions
@@ -24,7 +27,9 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 	var texture : Sprite = null
 	var bullet : Sprite = null
 	var batch : SpriteBatch = null
-	val player = new Player(new Vector2(0f, 0f), new Vector2(0, 0), 0)
+	val world = new World(new GdxVector(0, 0), true)
+	val player = new Player(new Vector2(0f, 0f), 0, world)
+	val enemy = new Player(new Vector2(100f, 100f), 0, world)
 	var bullets = List(new Projectile(new Vector2(200, 0), new Vector2(120, 90)))
 	var direction = new Vector2(0f, 0f)
 	var target = new Vector2(0f, 0f)
@@ -43,8 +48,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 				bullets = new Projectile(new Vector2[Float](player.position.x, player.position.y), 
 						(new Vector2[Float](Math.sin(Math.toRadians(-player.rotation)).toFloat,Math.cos(Math.toRadians(player.rotation)).toFloat)) * 500) :: bullets
 		}
-		player.velocity = direction.unit.toFloat * 600
-		player.update(elapsed)
+		player.velocity = (direction.unit.toFloat * 600)
 		bullets.foreach(_.update(elapsed))
 		val diff = target - player.position
 		player.rotation = Math.toDegrees(Math.atan2(-diff.toDouble.x, diff.toDouble.y)).toFloat
