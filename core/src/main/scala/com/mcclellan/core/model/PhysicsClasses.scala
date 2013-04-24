@@ -5,6 +5,7 @@ import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.Body
 import com.badlogic.gdx.physics.box2d.FixtureDef
 import com.badlogic.gdx.physics.box2d.World
+import com.badlogic.gdx.physics.box2d.CircleShape
 
 abstract class DynamicBody {
 	protected def world : World
@@ -17,5 +18,10 @@ trait CircleFixture {
 	def body : Body
 	def size : Int
 	
-	body.createFixture(new FixtureDef)
+	val fixture = new FixtureDef
+	val circle = new CircleShape
+	circle.setRadius(size)
+	fixture.shape = circle
+	fixture.density = 1
+	body.createFixture(fixture)
 }

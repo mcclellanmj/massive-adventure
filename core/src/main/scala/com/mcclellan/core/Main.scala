@@ -48,10 +48,11 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 				bullets = new Projectile(new Vector2[Float](player.position.x, player.position.y), 
 						(new Vector2[Float](Math.sin(Math.toRadians(-player.rotation)).toFloat,Math.cos(Math.toRadians(player.rotation)).toFloat)) * 500) :: bullets
 		}
-		player.velocity = (direction.unit.toFloat * 600)
+		player.velocity = direction.unit.toFloat * 600
 		bullets.foreach(_.update(elapsed))
 		val diff = target - player.position
 		player.rotation = Math.toDegrees(Math.atan2(-diff.toDouble.x, diff.toDouble.y)).toFloat
+		world.step(1/60f, 8, 3)
 	}
 
 	override def render = {

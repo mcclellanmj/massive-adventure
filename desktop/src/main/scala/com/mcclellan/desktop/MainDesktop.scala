@@ -9,8 +9,10 @@ import com.badlogic.gdx.ApplicationListener
 import com.mcclellan.input.UserInputListener
 import com.mcclellan.input.actions._
 import com.mcclellan.desktop.input.DesktopInput
+import com.badlogic.gdx.utils.GdxNativesLoader
 
 object MainDesktop extends App {
+	GdxNativesLoader.load()
 	val config = new LwjglApplicationConfiguration
 	config.useGL20 = true
 	config.width = 800
