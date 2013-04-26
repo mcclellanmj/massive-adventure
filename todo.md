@@ -3,3 +3,11 @@
 - [ ] implement ai
 - [ ] create implicits to manage conversion between vector types
 - [ ] collision listener
+- [ ] clean up character fixtures (tool?)
+- [ ] limit character speed
+- [ ] fix bullets rotating at impact
+- [ ] dedup wall code
+- [ ] ui class container
+- [ ] fix excessive globals in Main.scala
+- [ ] remove implicit booleanToInt, makes code less readable
+- [ ] fix unit measurement, characters need to scale to a reasonable actual size in meters

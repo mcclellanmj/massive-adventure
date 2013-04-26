@@ -40,7 +40,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 	val world = new World(new GdxVector(0, 0), true)
 	val player = new Player(new Vector2(2f, 2f), 0, world)
 	val enemy = new Player(new Vector2(100f * metersPerPixel, 100f * metersPerPixel), 0, world)
-	var bullets = List(new Projectile(new Vector2(200 * metersPerPixel, 0), new Vector2(120 * metersPerPixel, 90 * metersPerPixel), world))
+	var bullets = List[Projectile]()
 	var direction = new Vector2(0f, 0f)
 	var target = new Vector2(0f, 0f)
 	var firing = false
