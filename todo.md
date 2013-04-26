@@ -1,0 +1,5 @@
+- [ ] fix textures not multiple of 2
+- [ ] switch to gl10, for compatability
+- [ ] implement ai
+- [ ] create implicits to manage conversion between vector types
+- [ ] collision listener

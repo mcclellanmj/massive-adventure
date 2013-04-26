@@ -17,42 +17,82 @@ import com.badlogic.gdx.graphics.g2d.Sprite
 import com.mcclellan.core.model.Projectile
 import com.mcclellan.core.model.Projectile
 import com.badlogic.gdx.physics.box2d.World
-import com.badlogic.gdx.math.{Vector2 => GdxVector}
+import com.badlogic.gdx.math.{ Vector2 => GdxVector }
 import com.badlogic.gdx.physics.box2d.BodyDef
+import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer2
+import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.physics.box2d.FixtureDef
+import com.badlogic.gdx.physics.box2d.EdgeShape
+import com.badlogic.gdx.math.Vector3
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	import language.implicitConversions
+	// FIXME: Hacky, leads to hard to read code
 	implicit def booleanToInt(b : Boolean) = if (b) 1 else -1
 
-	var texture : Sprite = null
-	var bullet : Sprite = null
+	// FIXME: These probably don't need to be here, only a few would
+	val metersPerPixel = .01f
+	var personTexture : Sprite = null
+	var bulletTexture : Sprite = null
 	var batch : SpriteBatch = null
+	var uiBatch : SpriteBatch = null
 	val world = new World(new GdxVector(0, 0), true)
-	val player = new Player(new Vector2(0f, 0f), 0, world)
-	val enemy = new Player(new Vector2(100f, 100f), 0, world)
-	var bullets = List(new Projectile(new Vector2(200, 0), new Vector2(120, 90)))
+	val player = new Player(new Vector2(2f, 2f), 0, world)
+	val enemy = new Player(new Vector2(100f * metersPerPixel, 100f * metersPerPixel), 0, world)
+	var bullets = List(new Projectile(new Vector2(200 * metersPerPixel, 0), new Vector2(120 * metersPerPixel, 90 * metersPerPixel), world))
 	var direction = new Vector2(0f, 0f)
 	var target = new Vector2(0f, 0f)
 	var firing = false
+	var cam : Camera = null
 
 	override def create = {
-		texture = new Sprite(new Texture(Gdx.files.classpath("Man.png")))
-		bullet = new Sprite(new Texture(Gdx.files.classpath("Bullet.png")))
+		personTexture = new Sprite(new Texture(Gdx.files.classpath("Man.png")))
+		personTexture.setScale(metersPerPixel)
+		bulletTexture = new Sprite(new Texture(Gdx.files.classpath("Bullet.png")))
+		bulletTexture.setScale(metersPerPixel)
 		batch = new SpriteBatch
+		uiBatch = new SpriteBatch
 		Gdx.input.setInputProcessor(processor)
 		processor.game = this;
+		cam = new OrthographicCamera(Gdx.graphics.getWidth() * metersPerPixel, Gdx.graphics.getHeight() * metersPerPixel)
+		
+		// TODO: Create wall object
+		val wallDef = new BodyDef
+		wallDef.`type` = BodyDef.BodyType.StaticBody
+		val wall = world.createBody(wallDef)
+		
+		val fixtureDef = new FixtureDef
+		val shape = new EdgeShape
+		shape.set(new GdxVector(0, 0), new GdxVector(0, Gdx.graphics.getHeight() * metersPerPixel))
+		fixtureDef.shape = shape
+		fixtureDef.density = 100
+		wall.createFixture(fixtureDef)
+		
+		val wallDef2 = new BodyDef
+		wallDef2.`type` = BodyDef.BodyType.StaticBody
+		val wall2 = world.createBody(wallDef2)
+		
+		val fixtureDef2 = new FixtureDef
+		val shape2 = new EdgeShape
+		shape2.set(new GdxVector(0, 0), new GdxVector(Gdx.graphics.getWidth() * metersPerPixel, 0))
+		fixtureDef2.shape = shape2
+		fixtureDef2.density = 100
+		wall2.createFixture(fixtureDef2)
 	}
 
 	private def update(elapsed : Float) = {
-		if(firing) {
-				bullets = new Projectile(new Vector2[Float](player.position.x, player.position.y), 
-						(new Vector2[Float](Math.sin(Math.toRadians(-player.rotation)).toFloat,Math.cos(Math.toRadians(player.rotation)).toFloat)) * 500) :: bullets
+		if (firing) {
+			val playerDirection = new Vector2[Float](Math.sin(Math.toRadians(-player.rotation)).toFloat, Math.cos(Math.toRadians(player.rotation)).toFloat)
+			val newBullet = new Projectile(new Vector2[Float](player.position.x + (playerDirection.x * (2f * metersPerPixel)), player.position.y + (playerDirection.y * (2f * metersPerPixel))),
+				playerDirection * 8, world)
+			bullets = newBullet :: bullets
 		}
-		player.velocity = direction.unit.toFloat * 600
-		bullets.foreach(_.update(elapsed))
-		val diff = target - player.position
+		val force = direction.unit.toFloat
+		player.body.applyForceToCenter(new GdxVector(force.x, force.y), true)
+		val diff = target - new Vector2(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f)
 		player.rotation = Math.toDegrees(Math.atan2(-diff.toDouble.x, diff.toDouble.y)).toFloat
-		world.step(1/60f, 8, 3)
+		world.step(elapsed, 6, 2)
 	}
 
 	override def render = {
@@ -62,17 +102,31 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT)
 
 		batch.begin
-		font.draw(batch, String.valueOf(Gdx.graphics.getFramesPerSecond), 10, Gdx.graphics.getHeight - 20)
-		texture.setPosition(player.position.x - texture.getWidth() / 2, player.position.y - texture.getHeight() / 2)
-		
+		personTexture.setPosition(player.position.x - (personTexture.getWidth() / 2f), player.position.y - (personTexture.getHeight() / 2f))
+		cam.position.set(player.position.x, player.position.y, 0)
+
 		bullets.foreach(bullet0 => {
-			bullet.setPosition(bullet0.position.x, bullet0.position.y)
-			bullet.setRotation(-bullet0.rotation)
-			bullet.draw(batch)
+			bulletTexture.setPosition(bullet0.position.x- (bulletTexture.getWidth() / 2f), bullet0.position.y- (bulletTexture.getHeight() / 2f))
+			bulletTexture.setRotation(-bullet0.rotation)
+			bulletTexture.draw(batch)
 		})
-		texture.setRotation(player.rotation)
-		texture.draw(batch)
+		personTexture.setRotation(player.rotation)
+		personTexture.draw(batch)
+
+		personTexture.setPosition(enemy.position.x - (personTexture.getWidth() / 2f), enemy.position.y - (personTexture.getHeight() / 2f))
+		personTexture.setRotation(enemy.rotation)
+		personTexture.draw(batch)
 		batch.end
+
+		cam.update()
+		batch.setProjectionMatrix(cam.combined)
+
+		// TODO: Create UI object
+		uiBatch.begin()
+		font.draw(uiBatch, String.valueOf(Gdx.graphics.getFramesPerSecond), 10, (Gdx.graphics.getHeight - 20))
+		font.draw(uiBatch, "Bodies: " + world.getBodyCount(), 10, Gdx.graphics.getHeight() - 40)
+		font.draw(uiBatch, "Collisions: " + world.getContactCount(), 10, Gdx.graphics.getHeight() - 60)
+		uiBatch.end();
 	}
 
 	override def resize(width : Int, height : Int) = Unit
