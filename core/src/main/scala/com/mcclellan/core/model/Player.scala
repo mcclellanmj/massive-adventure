@@ -12,4 +12,6 @@ class Player(_position : Vector2[Float], _rotation : Float, protected val world 
 	this.rotation = _rotation
 	this.body.setLinearDamping(.8f)
 	lazy val size = 10.0f * .01f
+	
+	override def toString = this.position.toString
 }

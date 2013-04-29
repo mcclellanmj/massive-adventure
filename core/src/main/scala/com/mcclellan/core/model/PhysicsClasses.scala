@@ -16,6 +16,7 @@ abstract class DynamicBody {
 	val bodyDef = new BodyDef
 	bodyDef.`type` = BodyType.DynamicBody
 	val body = world.createBody(bodyDef)
+	body.setUserData(this)
 	
 	def rotation = this.body.getAngle
 	def rotation_=(angle:Float) = this.body.setTransform(this.body.getPosition, angle)

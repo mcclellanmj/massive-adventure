@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.{Vector2 => GdxVector}
 
 class Projectile(val _position : Vector2[Float], val _velocity : Vector2[Float], protected val world : World)
 	extends DynamicBody with BulletFixture {
-	lazy val size = 1f * .01f
+	lazy val size = .01f
 	body.setBullet(true)
 	this.position = _position
 	this.velocity = _velocity
