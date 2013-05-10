@@ -6,6 +6,12 @@ class Vector2[T : Numeric](val x : T, val y : T) {
 	def -(other : Vector2[T]) = new Vector2[T](x - other.x, y - other.y)
 	def *(scale : T) = new Vector2[T](x * scale, y * scale)
 	def *(vector : Vector2[T]) = x*vector.x + y*vector.y
+	def rotate(radians : Float) = {
+		val cos : Float = Math.cos(radians).toFloat;
+		val sin : Float = Math.sin(radians).toFloat;
+
+		new Vector2[Float](x.toFloat * cos - y.toFloat * sin, x.toFloat * sin + y.toFloat * cos);
+	}
 	lazy val unary_- = new Vector2[T](-this.x, -this.y)
 
 	lazy val magnitude = Math.sqrt((x*x + y*y).toDouble).toFloat

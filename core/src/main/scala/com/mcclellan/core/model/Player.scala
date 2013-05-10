@@ -10,7 +10,7 @@ class Player(_position : Vector2[Float], _rotation : Float, protected val world 
 	extends DynamicBody with CircleFixture {
 	this.position = _position
 	this.rotation = _rotation
-	this.body.setLinearDamping(.8f)
+	this.body.setLinearDamping(3.0f)
 	lazy val size = 10.0f * .01f
 	
 	override def toString = this.position.toString
