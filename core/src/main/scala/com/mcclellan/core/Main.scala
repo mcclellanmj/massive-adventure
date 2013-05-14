@@ -5,7 +5,6 @@ import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL10
-import com.badlogic.gdx.InputProcessor
 import com.mcclellan.input.MappedInputProcessor
 import com.mcclellan.input.UserInputListener
 import com.mcclellan.input.Action
@@ -15,59 +14,138 @@ import com.mcclellan.core.model.Player
 import com.mcclellan.core.math.Vector2
 import com.badlogic.gdx.graphics.g2d.Sprite
 import com.mcclellan.core.model.Projectile
-import com.mcclellan.core.model.Projectile
+import com.badlogic.gdx.physics.box2d.World
+import com.badlogic.gdx.math.{ Vector2 => GdxVector }
+import com.mcclellan.core.physics.ContactResolver
+import scala.collection.mutable.{ Set => MutableSet }
+import com.mcclellan.core.model.DynamicBody
+import com.mcclellan.core.graphics.camera.ScaledOrthographicCamera
+import scala.collection.JavaConversions._
+import com.mcclellan.core.implicits.VectorImplicits._
+import com.mcclellan.core.implicits.GdxPimps._
+import com.mcclellan.core.graphics.camera.ScaledOrthographicCamera
+import com.mcclellan.core.model.Wall
+import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
+import com.mcclellan.core.debug.Box2dRenderer
+import com.mcclellan.core.physics.WorldConnector
+import com.mcclellan.core.physics.WorldConnectorImpl
+import com.mcclellan.core.physics.Handlers
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	import language.implicitConversions
+	// FIXME: Hacky, leads to hard to read code
 	implicit def booleanToInt(b : Boolean) = if (b) 1 else -1
 
-	var texture : Sprite = null
-	var bullet : Sprite = null
-	var batch : SpriteBatch = null
-	val player = new Player(new Vector2(0f, 0f), new Vector2(0, 0), 0)
-	var bullets = List(new Projectile(new Vector2(200, 0), new Vector2(120, 90)))
+	// FIXME: These probably don't need to be here, only a few would
+	val metersPerPixel = .01f
+	lazy val personTexture : Sprite = {
+		val texture = new Sprite(new Texture(Gdx.files.classpath("Man.png")))
+		texture.setBounds(0, 0, 32 * metersPerPixel, 32 * metersPerPixel)
+		texture.setOrigin((texture.getWidth() / 2), (texture.getHeight() / 2))
+		texture
+	}
+
+	lazy val bulletTexture : Sprite = {
+		val bulletTexture = new Sprite(new Texture(Gdx.files.classpath("Bullet.png")))
+		bulletTexture.setBounds(0, 0, 1 * metersPerPixel, 6 * metersPerPixel)
+		bulletTexture.setOrigin(bulletTexture.getWidth() / 2f, bulletTexture.getHeight() / 2f)
+		bulletTexture
+	}
+
+	lazy val batch : SpriteBatch = new SpriteBatch
+	lazy val uiBatch : SpriteBatch = new SpriteBatch
+	val fullWorld = new World(new GdxVector(0, 0), true)
+	implicit lazy val world = new WorldConnectorImpl(fullWorld)
+	val player = new Player(new Vector2(2f, 2f), 0)
+	val enemy = new Player(new Vector2(1f, 1f), 0)
+	lazy val font = new BitmapFont
+	var bullets = Set[Projectile]()
 	var direction = new Vector2(0f, 0f)
 	var target = new Vector2(0f, 0f)
 	var firing = false
+	lazy val cam = new ScaledOrthographicCamera(metersPerPixel, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
+	lazy val removals : MutableSet[DynamicBody] = MutableSet()
 
 	override def create = {
-		texture = new Sprite(new Texture(Gdx.files.classpath("Man.png")))
-		bullet = new Sprite(new Texture(Gdx.files.classpath("Bullet.png")))
-		batch = new SpriteBatch
 		Gdx.input.setInputProcessor(processor)
-		processor.game = this;
+		processor.game = this
+
+		fullWorld.setContactListener(new ContactResolver(removals, Handlers.allHandlers))
+		val screenHeight = Gdx.graphics.getHeight() * metersPerPixel
+		val screenWidth = Gdx.graphics.getWidth() * metersPerPixel
+		fullWorld.setWarmStarting(true)
+
+		new Wall(new Vector2(0, 0), new Vector2(0, screenHeight))
+		new Wall(new Vector2(0, 0), new Vector2(screenWidth, 0))
+		new Wall(new Vector2(screenWidth, 0), new Vector2(screenWidth, screenHeight))
+		new Wall(new Vector2(0, screenHeight), new Vector2(screenWidth, screenHeight))
+
 	}
 
 	private def update(elapsed : Float) = {
-		if(firing) {
-				bullets = new Projectile(new Vector2[Float](player.position.x, player.position.y), 
-						(new Vector2[Float](Math.sin(Math.toRadians(-player.rotation)).toFloat,Math.cos(Math.toRadians(player.rotation)).toFloat)) * 500) :: bullets
+		if (firing) {
+			val randAngle = (Math.random() * 5) - 2.5
+			val playerDirection = new Vector2[Float](Math.sin(Math.toRadians(-player.rotation)).toFloat, Math.cos(Math.toRadians(player.rotation)).toFloat)
+			val bulletDirection = new Vector2[Float](player.position.x + (playerDirection.x * (15f * metersPerPixel)), player.position.y + (playerDirection.y * (15f * metersPerPixel)))
+			val newBullet = new Projectile(bulletDirection, (playerDirection * 7).rotate(Math.toRadians(randAngle).toFloat))
+			bullets = bullets + newBullet
 		}
-		player.velocity = direction.unit.toFloat * 600
-		player.update(elapsed)
-		bullets.foreach(_.update(elapsed))
-		val diff = target - player.position
+		
+		if(enemy.health < 1) {
+			enemy.health = 10
+			enemy.position = new Vector2(Math.random() * 8, Math.random() * 8).toFloat
+		}
+
+		val force = direction.unit.toFloat * .4f
+		player.body.applyForceToCenter(force.rotate(Math.toRadians(player.rotation).toFloat), true)
+		player.body.setLinearVelocity(player.body.getLinearVelocity().limit(3f))
+
+		val diff = target - new Vector2(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f)
 		player.rotation = Math.toDegrees(Math.atan2(-diff.toDouble.x, diff.toDouble.y)).toFloat
+
+		fullWorld.step(elapsed, 2, 1)
+		cam.position = player.position
+
+		removals.foreach {
+			case x : Projectile => {
+				fullWorld.destroyBody(x.body)
+				bullets = bullets - x
+				removals.remove(x)
+			}
+		}
+
 	}
 
 	override def render = {
-		val font = new BitmapFont
-		update(Gdx.graphics.getDeltaTime)
-		Gdx.gl.glClearColor(0, 0, 0, 0)
+		update(Gdx.graphics.getRawDeltaTime)
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT)
 
-		batch.begin
-		font.draw(batch, String.valueOf(Gdx.graphics.getFramesPerSecond), 10, Gdx.graphics.getHeight - 20)
-		texture.setPosition(player.position.x - texture.getWidth() / 2, player.position.y - texture.getHeight() / 2)
+		batch.setProjectionMatrix(cam.projectionMatrix)
+		batch.begin {
+			bullets.foreach(bullet0 => {
+				bulletTexture.setRotation(-bullet0.rotation)
+				bulletTexture.setPosition(bullet0.position.x, bullet0.position.y)
+				bulletTexture.draw(batch)
+			})
+			personTexture.setPosition(player.position.x, player.position.y)
+			personTexture.setRotation(player.rotation)
+			personTexture.draw(batch)
 		
-		bullets.foreach(bullet0 => {
-			bullet.setPosition(bullet0.position.x, bullet0.position.y)
-			bullet.setRotation(-bullet0.rotation)
-			bullet.draw(batch)
-		})
-		texture.setRotation(player.rotation)
-		texture.draw(batch)
-		batch.end
+			personTexture.setPosition(enemy.position.x, enemy.position.y)
+			personTexture.setRotation(enemy.rotation)
+			personTexture.draw(batch)
+		}
+
+		// TODO: Create UI object
+		uiBatch.begin {
+			font.draw(uiBatch, String.valueOf(Gdx.graphics.getFramesPerSecond), 10, (Gdx.graphics.getHeight - 20))
+			font.draw(uiBatch, "Bodies: " + fullWorld.getBodyCount(), 10, Gdx.graphics.getHeight() - 40)
+			font.draw(uiBatch, "Collisions: " + fullWorld.getContactCount(), 10, Gdx.graphics.getHeight() - 60)
+			font.draw(uiBatch, "Enemy: " + enemy.health, 10, Gdx.graphics.getHeight() - 80)
+			font.draw(uiBatch, "Player: " + player.health, 10, Gdx.graphics.getHeight() - 100)
+		}
+
+		Box2dRenderer.renderWorld(fullWorld, cam)
 	}
 
 	override def resize(width : Int, height : Int) = Unit
