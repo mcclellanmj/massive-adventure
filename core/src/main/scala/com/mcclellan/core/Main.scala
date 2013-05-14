@@ -27,6 +27,9 @@ import com.mcclellan.core.graphics.camera.ScaledOrthographicCamera
 import com.mcclellan.core.model.Wall
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
 import com.mcclellan.core.debug.Box2dRenderer
+import com.mcclellan.core.physics.WorldConnector
+import com.mcclellan.core.physics.WorldConnectorImpl
+import com.mcclellan.core.physics.Handlers
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	import language.implicitConversions
@@ -51,9 +54,10 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 
 	lazy val batch : SpriteBatch = new SpriteBatch
 	lazy val uiBatch : SpriteBatch = new SpriteBatch
-	val world = new World(new GdxVector(0, 0), true)
-	val player = new Player(new Vector2(2f, 2f), 0, world)
-	val enemy = new Player(new Vector2(1f, 1f), 0, world)
+	val fullWorld = new World(new GdxVector(0, 0), true)
+	implicit lazy val world = new WorldConnectorImpl(fullWorld)
+	val player = new Player(new Vector2(2f, 2f), 0)
+	val enemy = new Player(new Vector2(1f, 1f), 0)
 	lazy val font = new BitmapFont
 	var bullets = Set[Projectile]()
 	var direction = new Vector2(0f, 0f)
@@ -66,24 +70,30 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		Gdx.input.setInputProcessor(processor)
 		processor.game = this
 
-		world.setContactListener(new ContactResolver(removals))
+		fullWorld.setContactListener(new ContactResolver(removals, Handlers.allHandlers))
 		val screenHeight = Gdx.graphics.getHeight() * metersPerPixel
 		val screenWidth = Gdx.graphics.getWidth() * metersPerPixel
-		world.setWarmStarting(true)
+		fullWorld.setWarmStarting(true)
 
-		new Wall(new Vector2(0, 0), new Vector2(0, screenHeight))(world)
-		new Wall(new Vector2(0, 0), new Vector2(screenWidth, 0))(world)
-		new Wall(new Vector2(screenWidth, 0), new Vector2(screenWidth, screenHeight))(world)
-		new Wall(new Vector2(0, screenHeight), new Vector2(screenWidth, screenHeight))(world)
+		new Wall(new Vector2(0, 0), new Vector2(0, screenHeight))
+		new Wall(new Vector2(0, 0), new Vector2(screenWidth, 0))
+		new Wall(new Vector2(screenWidth, 0), new Vector2(screenWidth, screenHeight))
+		new Wall(new Vector2(0, screenHeight), new Vector2(screenWidth, screenHeight))
 
 	}
 
 	private def update(elapsed : Float) = {
 		if (firing) {
+			val randAngle = (Math.random() * 5) - 2.5
 			val playerDirection = new Vector2[Float](Math.sin(Math.toRadians(-player.rotation)).toFloat, Math.cos(Math.toRadians(player.rotation)).toFloat)
-			val newBullet = new Projectile(new Vector2[Float](player.position.x + (playerDirection.x * (15f * metersPerPixel)), player.position.y + (playerDirection.y * (15f * metersPerPixel))),
-				playerDirection * 7, world)
+			val bulletDirection = new Vector2[Float](player.position.x + (playerDirection.x * (15f * metersPerPixel)), player.position.y + (playerDirection.y * (15f * metersPerPixel)))
+			val newBullet = new Projectile(bulletDirection, (playerDirection * 7).rotate(Math.toRadians(randAngle).toFloat))
 			bullets = bullets + newBullet
+		}
+		
+		if(enemy.health < 1) {
+			enemy.health = 10
+			enemy.position = new Vector2(Math.random() * 8, Math.random() * 8).toFloat
 		}
 
 		val force = direction.unit.toFloat * .4f
@@ -93,12 +103,12 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		val diff = target - new Vector2(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f)
 		player.rotation = Math.toDegrees(Math.atan2(-diff.toDouble.x, diff.toDouble.y)).toFloat
 
-		world.step(elapsed, 4, 1)
+		fullWorld.step(elapsed, 2, 1)
 		cam.position = player.position
 
 		removals.foreach {
 			case x : Projectile => {
-				world.destroyBody(x.body)
+				fullWorld.destroyBody(x.body)
 				bullets = bullets - x
 				removals.remove(x)
 			}
@@ -129,11 +139,13 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		// TODO: Create UI object
 		uiBatch.begin {
 			font.draw(uiBatch, String.valueOf(Gdx.graphics.getFramesPerSecond), 10, (Gdx.graphics.getHeight - 20))
-			font.draw(uiBatch, "Bodies: " + world.getBodyCount(), 10, Gdx.graphics.getHeight() - 40)
-			font.draw(uiBatch, "Collisions: " + world.getContactCount(), 10, Gdx.graphics.getHeight() - 60)
+			font.draw(uiBatch, "Bodies: " + fullWorld.getBodyCount(), 10, Gdx.graphics.getHeight() - 40)
+			font.draw(uiBatch, "Collisions: " + fullWorld.getContactCount(), 10, Gdx.graphics.getHeight() - 60)
+			font.draw(uiBatch, "Enemy: " + enemy.health, 10, Gdx.graphics.getHeight() - 80)
+			font.draw(uiBatch, "Player: " + player.health, 10, Gdx.graphics.getHeight() - 100)
 		}
 
-		Box2dRenderer.renderWorld(world, cam)
+		Box2dRenderer.renderWorld(fullWorld, cam)
 	}
 
 	override def resize(width : Int, height : Int) = Unit

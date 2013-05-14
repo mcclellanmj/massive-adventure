@@ -11,9 +11,14 @@ import com.badlogic.gdx.math.{Vector2 => GdxVector}
 import com.badlogic.gdx.physics.box2d.Filter
 import com.badlogic.gdx.physics.box2d.MassData
 import com.mcclellan.core.implicits.VectorImplicits._
+import com.mcclellan.core.physics.WorldConnector
 
-abstract class DynamicBody {
-	protected def world : World
+trait MyBody {
+	val body : Body
+}
+
+abstract class DynamicBody extends MyBody{
+	protected def world : WorldConnector
 	val bodyDef = new BodyDef
 	bodyDef.`type` = BodyType.DynamicBody
 	val body = world.createBody(bodyDef)
@@ -46,10 +51,11 @@ trait BulletFixture {
 	val fixture = new FixtureDef
 	val circle = new CircleShape
 	circle.setRadius(size)
+	body.setFixedRotation(true)
 	fixture.shape = circle
 	fixture.filter.categoryBits = 0x0100
 	fixture.filter.maskBits = 0x0001
 	fixture.density = .01f
-	fixture.restitution = .3f
+	fixture.restitution = 1f
 	body.createFixture(fixture)
 }
