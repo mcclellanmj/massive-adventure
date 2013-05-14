@@ -23,6 +23,7 @@ class TestBody extends Body(null, 1) {
 
 class FakeConnector extends WorldConnector {
 	def createBody(body : BodyDef) = new TestBody
+	def deleteBody(body : Body) = Unit
 }
 
 class Body1 extends MyBody {
