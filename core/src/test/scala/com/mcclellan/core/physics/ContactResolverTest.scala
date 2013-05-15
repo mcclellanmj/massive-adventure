@@ -22,6 +22,7 @@ class TestBody extends Body(null, 1) {
 }
 
 class FakeConnector extends WorldConnector {
+	val player : Player = null
 	def createBody(body : BodyDef) = new TestBody
 	def deleteBody(body : Body) = Unit
 }
