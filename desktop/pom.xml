@@ -13,7 +13,7 @@
 	<name>Main desktop</name>
 
 	<properties>
-		<mainClass>com.mcclellan.java.MainDesktop</mainClass>
+		<mainClass>com.mcclellan.desktop.MainDesktop</mainClass>
 	</properties>
 
 	<build>
@@ -23,6 +23,16 @@
 			</resource>
 		</resources>
 		<plugins>
+			<plugin>
+				<groupId>org.scala-tools</groupId>
+				<artifactId>maven-scala-plugin</artifactId>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+			</plugin>
+		
 			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.4</version>

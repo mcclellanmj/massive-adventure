@@ -128,11 +128,12 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 				bulletTexture.setPosition(bullet0.position.x, bullet0.position.y)
 				bulletTexture.draw(batch)
 			})
-			personTexture.setPosition(player.position.x, player.position.y)
+			// TODO: Fix magic number texture offset
+			personTexture.setPosition(player.position.x - .16f, player.position.y - .16f)
 			personTexture.setRotation(player.rotation.degrees)
 			personTexture.draw(batch)
 
-			personTexture.setPosition(enemy.position.x, enemy.position.y)
+			personTexture.setPosition(enemy.position.x - .16f, enemy.position.y - .16f)
 			personTexture.setRotation(enemy.rotation.degrees)
 			personTexture.draw(batch)
 		}

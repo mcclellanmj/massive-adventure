@@ -13,13 +13,14 @@ import com.badlogic.gdx.utils.GdxNativesLoader
 import java.awt.GraphicsEnvironment
 
 object MainDesktop extends App {
-	GdxNativesLoader.load()
 	val config = new LwjglApplicationConfiguration
 	// FIXME: Fix textures so it can render using GL10
 	config.useGL20 = true
 	config.vSyncEnabled = false
-	val screen = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
+	
+	//val screen = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
 	config.width = 1024
 	config.height = 768
+	GdxNativesLoader.load()
 	val app = new LwjglApplication(new Main(new DesktopInput), config)
 }
