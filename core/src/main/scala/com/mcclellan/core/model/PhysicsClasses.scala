@@ -12,6 +12,8 @@ import com.badlogic.gdx.physics.box2d.Filter
 import com.badlogic.gdx.physics.box2d.MassData
 import com.mcclellan.core.implicits.VectorImplicits._
 import com.mcclellan.core.physics.WorldConnector
+import com.mcclellan.core.math.Angle
+import com.mcclellan.core.math.Degrees
 
 trait MyBody {
 	val body : Body
@@ -24,12 +26,12 @@ abstract class DynamicBody extends MyBody{
 	val body = world.createBody(bodyDef)
 	body.setUserData(this)
 	
-	def rotation = this.body.getAngle
-	def rotation_=(angle:Float) = this.body.setTransform(this.body.getPosition, angle)
-	def position : Vector2[Float] = this.body.getPosition
-	def position_=(pos:Vector2[Float]) = this.body.setTransform(pos, this.body.getAngle)
-	def velocity : Vector2[Float] = this.body.getLinearVelocity
-	def velocity_=(vel:Vector2[Float]) = this.body.setLinearVelocity(vel)
+	def rotation = Degrees(this.body.getAngle)
+	def rotation_=(angle:Angle) = this.body.setTransform(this.body.getPosition, angle.degrees)
+	def position : Vector2 = this.body.getPosition
+	def position_=(pos:Vector2) = this.body.setTransform(pos, this.body.getAngle)
+	def velocity : Vector2 = this.body.getLinearVelocity
+	def velocity_=(vel:Vector2) = this.body.setLinearVelocity(vel)
 }
 
 trait CircleFixture {

@@ -9,7 +9,7 @@ import com.badlogic.gdx.physics.box2d.EdgeShape
 import com.mcclellan.core.implicits.VectorImplicits._
 import com.mcclellan.core.physics.WorldConnector
 
-class Wall(val start : Vector2[Float], val end : Vector2[Float])(implicit val world : WorldConnector) extends MyBody {
+class Wall(val start : Vector2, val end : Vector2)(implicit val world : WorldConnector) extends MyBody {
 	val wallDef = new BodyDef
 	wallDef.`type` = BodyDef.BodyType.StaticBody
 	val body = world.createBody(wallDef)

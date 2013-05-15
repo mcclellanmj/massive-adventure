@@ -3,6 +3,8 @@ package com.mcclellan.core.model
 import com.mcclellan.core.physics.WorldConnector
 import com.mcclellan.core.math.Vector2
 import com.mcclellan.core.GameConnector
+import com.mcclellan.core.math.Angle
+import com.mcclellan.core.math.Degrees
 
 trait Weapon {
 	def update(elapsed:Float, isFiring:Boolean)
@@ -22,12 +24,13 @@ class Shotgun(implicit world : WorldConnector, game : GameConnector) extends Wea
 		}
 	}
 	
-	def createPellets(direction : Float) = {
-		val dir = new Vector2[Float](Math.sin(Math.toRadians(-game.player.rotation)).toFloat, Math.cos(Math.toRadians(game.player.rotation)).toFloat)
-		val position = new Vector2[Float](game.player.position.x + (dir.x * (15f * .01f)), game.player.position.y + (dir.y * (15f * .01f)))
+	def createPellets(direction : Angle) = {
+		val dir = Vector2.fromAngle(direction)
+		// TODO: Obtain bullet spawn point external resource
+		val position = Vector2(game.player.position.x + (dir.x * .15f), game.player.position.y + (dir.y * .15f))
 		
 		val pellets = (1 to 37).map(n => {
-			dir.rotate(Math.toRadians((Math.random() * 8) - 4).toFloat)
+			dir.rotate(Degrees((Math.random() * 8 - 4).toFloat))
 		}).foreach(pellet => {
 			val newBullet = new Projectile(position + (pellet * (Math.random().toFloat / 6f)), (pellet * 7))
 		})

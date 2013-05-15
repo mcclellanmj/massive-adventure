@@ -4,9 +4,10 @@ import com.mcclellan.core.math.Vector2
 import com.badlogic.gdx.physics.box2d.BodyDef
 import com.badlogic.gdx.physics.box2d.BodyDef.BodyType
 import com.mcclellan.core.physics.WorldConnector
+import com.mcclellan.core.math.Angle
 
 
-class Player(_position : Vector2[Float], _rotation : Float)(implicit val world : WorldConnector) 
+class Player(_position : Vector2, _rotation : Angle)(implicit val world : WorldConnector) 
 	extends DynamicBody with CircleFixture {
 	this.position = _position
 	this.rotation = _rotation

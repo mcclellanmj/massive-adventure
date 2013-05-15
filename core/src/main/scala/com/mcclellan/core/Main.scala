@@ -22,8 +22,8 @@ import com.mcclellan.core.model.DynamicBody
 import com.mcclellan.core.graphics.camera.ScaledOrthographicCamera
 import scala.collection.JavaConversions._
 import com.mcclellan.core.implicits.VectorImplicits._
-import com.mcclellan.core.implicits.GdxPimps._
 import com.mcclellan.core.graphics.camera.ScaledOrthographicCamera
+import com.mcclellan.core.implicits.GdxPimps._
 import com.mcclellan.core.model.Wall
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
 import com.mcclellan.core.debug.Box2dRenderer
@@ -31,6 +31,8 @@ import com.mcclellan.core.physics.WorldConnector
 import com.mcclellan.core.physics.WorldConnectorImpl
 import com.mcclellan.core.physics.Handlers
 import com.mcclellan.core.model.Shotgun
+import com.mcclellan.core.math.Degrees
+import com.mcclellan.core.math.Radians
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	import language.implicitConversions
@@ -57,14 +59,14 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 	lazy val uiBatch : SpriteBatch = new SpriteBatch
 	val fullWorld = new World(new GdxVector(0, 0), true)
 	implicit val world = new WorldConnectorImpl(fullWorld)
-	val player : Player = new Player(new Vector2(2f, 2f), 0)
-	val enemy = new Player(new Vector2(1f, 1f), 0)
+	val player : Player = new Player(Vector2(2f, 2f), Degrees(0))
+	val enemy = new Player(Vector2(1f, 1f), Degrees(0))
 	
 	implicit lazy val game = GameConnector.forPlayer(player)
 	lazy val font = new BitmapFont
 	var bullets = Set[Projectile]()
-	var direction = new Vector2(0f, 0f)
-	var target = new Vector2(0f, 0f)
+	var direction = Vector2(0f, 0f)
+	var target = Vector2(0f, 0f)
 	var firing = false
 	lazy val cam = new ScaledOrthographicCamera(metersPerPixel, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
 	lazy val removals : MutableSet[DynamicBody] = MutableSet()
@@ -79,36 +81,28 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		val screenWidth = Gdx.graphics.getWidth() * metersPerPixel
 		fullWorld.setWarmStarting(true)
 
-		new Wall(new Vector2(0, 0), new Vector2(0, screenHeight))
-		new Wall(new Vector2(0, 0), new Vector2(screenWidth, 0))
-		new Wall(new Vector2(screenWidth, 0), new Vector2(screenWidth, screenHeight))
-		new Wall(new Vector2(0, screenHeight), new Vector2(screenWidth, screenHeight))
+		new Wall(Vector2(0, 0), Vector2(0, screenHeight))
+		new Wall(Vector2(0, 0), Vector2(screenWidth, 0))
+		new Wall(Vector2(screenWidth, 0), Vector2(screenWidth, screenHeight))
+		new Wall(Vector2(0, screenHeight), Vector2(screenWidth, screenHeight))
 
 	}
 
 	private def update(elapsed : Float) = {
-		//		if (firing) {
-		//			val randAngle = (Math.random() * 5) - 2.5
-		//			val playerDirection = new Vector2[Float](Math.sin(Math.toRadians(-player.rotation)).toFloat, Math.cos(Math.toRadians(player.rotation)).toFloat)
-		//			val bulletDirection = new Vector2[Float](player.position.x + (playerDirection.x * (15f * metersPerPixel)), player.position.y + (playerDirection.y * (15f * metersPerPixel)))
-		//			val newBullet = new Projectile(bulletDirection, (playerDirection * 7).rotate(Math.toRadians(randAngle).toFloat))
-		//			bullets = bullets + newBullet
-		//		}
-		//		
 		if (enemy.health < 1) {
 			enemy.health = 10
-			enemy.position = new Vector2(Math.random() * 8, Math.random() * 8).toFloat
+			enemy.position = Vector2(Math.random().toFloat * 8, Math.random().toFloat * 8f)
 		}
 
 		// TODO: Needs to be in the player class
 		shotgun.update(elapsed, firing)
 
-		val force = direction.unit.toFloat * .4f
-		player.body.applyForceToCenter(force.rotate(Math.toRadians(player.rotation).toFloat), true)
+		val force = direction.unit * .4f
+		player.body.applyForceToCenter(force.rotate(player.rotation), true)
 		player.body.setLinearVelocity(player.body.getLinearVelocity().limit(3f))
 
-		val diff = target - new Vector2(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f)
-		player.rotation = Math.toDegrees(Math.atan2(-diff.toDouble.x, diff.toDouble.y)).toFloat
+		val diff = target - Vector2(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f)
+		player.rotation = Radians(Math.atan2(-diff.x, diff.y).toFloat)
 
 		fullWorld.step(elapsed, 2, 1)
 		cam.position = player.position
@@ -130,16 +124,16 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		batch.setProjectionMatrix(cam.projectionMatrix)
 		batch.begin {
 			bullets.foreach(bullet0 => {
-				bulletTexture.setRotation(-bullet0.rotation)
+				bulletTexture.setRotation(bullet0.rotation.degrees)
 				bulletTexture.setPosition(bullet0.position.x, bullet0.position.y)
 				bulletTexture.draw(batch)
 			})
 			personTexture.setPosition(player.position.x, player.position.y)
-			personTexture.setRotation(player.rotation)
+			personTexture.setRotation(player.rotation.degrees)
 			personTexture.draw(batch)
 
 			personTexture.setPosition(enemy.position.x, enemy.position.y)
-			personTexture.setRotation(enemy.rotation)
+			personTexture.setRotation(enemy.rotation.degrees)
 			personTexture.draw(batch)
 		}
 

@@ -5,6 +5,6 @@ import com.badlogic.gdx.math.{Vector2 => GdxVector}
 import language.implicitConversions
 
 object VectorImplicits {
-	implicit def toGdxVector[T](vec : Vector2[T]) = new GdxVector(vec.toFloat.x, vec.toFloat.y)
+	implicit def toGdxVector(vec : Vector2) = new GdxVector(vec.x, vec.y)
 	implicit def toVector(vec : GdxVector) = new Vector2(vec.x, vec.y)
 }

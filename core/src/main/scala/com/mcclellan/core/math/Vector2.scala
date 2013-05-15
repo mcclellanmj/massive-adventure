@@ -1,35 +1,37 @@
 package com.mcclellan.core.math
 import Numeric.Implicits._
+import com.badlogic.gdx.math.MathUtils
 
-class Vector2[T : Numeric](val x : T, val y : T) {
-	def +(other : Vector2[T]) = new Vector2[T](x + other.x, y + other.y)
-	def -(other : Vector2[T]) = new Vector2[T](x - other.x, y - other.y)
-	def *(scale : T) = new Vector2[T](x * scale, y * scale)
-	def *(vector : Vector2[T]) = x*vector.x + y*vector.y
-	def rotate(radians : Float) = {
-		val cos : Float = Math.cos(radians).toFloat;
-		val sin : Float = Math.sin(radians).toFloat;
+case class Vector2(val x : Float, val y : Float) {
+	def +(other : Vector2) = Vector2(x + other.x, y + other.y)
+	def -(other : Vector2) = Vector2(x - other.x, y - other.y)
+	def *(scale : Float) = Vector2(x * scale, y * scale)
+	def *(vector : Vector2) = x*vector.x + y*vector.y
+	def rotate(angle : Angle) = {
+		val cos : Float = Math.cos(angle.radians).toFloat
+		val sin : Float = Math.sin(angle.radians).toFloat
 
-		new Vector2[Float](x.toFloat * cos - y.toFloat * sin, x.toFloat * sin + y.toFloat * cos);
+		new Vector2(x * cos - y * sin, x * sin + y * cos);
 	}
-	lazy val unary_- = new Vector2[T](-this.x, -this.y)
+	lazy val unary_- = Vector2(-this.x, -this.y)
 
-	lazy val magnitude = Math.sqrt((x*x + y*y).toDouble).toFloat
-	lazy val angle = Math.atan2(x.toDouble, y.toDouble)
+	lazy val magnitude = Math.sqrt((x*x + y*y)).toFloat
+	lazy val angle = Radians(Math.atan2(x, -y).toFloat)
 	lazy val unit = {
-		if(y == 0) new Vector2[Float](x.toFloat, 0)
-		else new Vector2[Float](x.toFloat/magnitude.toFloat, y.toFloat/magnitude.toFloat)
+		if(y == 0) Vector2(x, 0)
+		else Vector2(x/magnitude, y/magnitude)
 	}
-	
-	lazy val toDouble = new Vector2[Double](x.toDouble, y.toDouble)
-	lazy val toFloat = new Vector2[Float](x.toFloat, y.toFloat)
-	lazy val toInt = new Vector2[Int](x.toInt, y.toInt)
-	lazy val toLong = new Vector2[Long](x.toLong, y.toLong)
 	
 	override def equals(other : Any) = other match {
-		case vec:Vector2[_] => x == vec.x && y == vec.y
+		case vec:Vector2 => x == vec.x && y == vec.y
 		case _ => false
 	}
 	
 	override def toString = "(" + x + "," + y + ")"
+}
+
+object Vector2 {
+	def fromAngle(angle : Angle) = {
+		Vector2(Math.sin(-angle.radians).toFloat, Math.cos(angle.radians).toFloat)
+	}
 }
