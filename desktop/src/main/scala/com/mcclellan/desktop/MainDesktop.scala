@@ -17,6 +17,7 @@ object MainDesktop extends App {
 	val config = new LwjglApplicationConfiguration
 	// FIXME: Fix textures so it can render using GL10
 	config.useGL20 = true
+	config.vSyncEnabled = false
 	val screen = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice()
 	config.width = 1024
 	config.height = 768

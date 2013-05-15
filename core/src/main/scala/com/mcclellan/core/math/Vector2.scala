@@ -2,7 +2,7 @@ package com.mcclellan.core.math
 import Numeric.Implicits._
 import com.badlogic.gdx.math.MathUtils
 
-case class Vector2(val x : Float, val y : Float) {
+class Vector2(val x : Float, val y : Float) {
 	def +(other : Vector2) = Vector2(x + other.x, y + other.y)
 	def -(other : Vector2) = Vector2(x - other.x, y - other.y)
 	def *(scale : Float) = Vector2(x * scale, y * scale)
@@ -31,7 +31,13 @@ case class Vector2(val x : Float, val y : Float) {
 }
 
 object Vector2 {
+	lazy val zero = new Vector2(0, 0)
+	
 	def fromAngle(angle : Angle) = {
 		Vector2(Math.sin(-angle.radians).toFloat, Math.cos(angle.radians).toFloat)
+	}
+	
+	def apply(x:Float, y:Float) = {
+		if(x == 0 && y == 0) zero else new Vector2(x, y)
 	}
 }

@@ -20,7 +20,6 @@ class Shotgun(implicit world : WorldConnector, game : GameConnector) extends Wea
 			createPellets(game.player.rotation)
 			elapsedSinceFire = 0
 			randomChaos= (Math.random() /8) - 1/16
-			
 		}
 	}
 	
@@ -29,11 +28,10 @@ class Shotgun(implicit world : WorldConnector, game : GameConnector) extends Wea
 		// TODO: Obtain bullet spawn point external resource
 		val position = Vector2(game.player.position.x + (dir.x * .15f), game.player.position.y + (dir.y * .15f))
 		
-		val pellets = (1 to 37).map(n => {
-			dir.rotate(Degrees((Math.random() * 8 - 4).toFloat))
-		}).foreach(pellet => {
-			val newBullet = new Projectile(position + (pellet * (Math.random().toFloat / 6f)), (pellet * 7))
-		})
+		// TODO: Add new bullets to the game so they update and draw, currently only in physics world
+		val newProjectiles = for{i <- 1 to 37
+			rotatedVector = dir.rotate(Degrees((Math.random() * 8 - 4).toFloat))
+		} yield new Projectile(position + (rotatedVector * (Math.random().toFloat / 6f)), rotatedVector * 7)
 	}
 }
 

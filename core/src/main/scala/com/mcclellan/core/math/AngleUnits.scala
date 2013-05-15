@@ -1,6 +1,6 @@
 package com.mcclellan.core.math
 
-object Conversions {
+private object Conversions {
 	private val _radiansToDegrees = 57.2957795f
 	private val _degreesToRadians = 0.0174532925f
 	
@@ -8,17 +8,17 @@ object Conversions {
 	def degreesToRadians(value : Float) = value * _degreesToRadians
 }
 
-trait Angle {
+sealed trait Angle {
 	def degrees : Float
 	def radians : Float
 }
 
-case class Radians(value:Float) extends Angle {
+sealed case class Radians(value:Float) extends Angle {
 	lazy val degrees = Conversions.radiansToDegrees(value)
 	val radians = value 
 }
 
-case class Degrees(val value:Float) extends Angle {
+sealed case class Degrees(value:Float) extends Angle {
 	val degrees = value
 	lazy val radians = Conversions.degreesToRadians(value)
 }
