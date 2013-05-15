@@ -26,7 +26,7 @@ class Shotgun(implicit world : WorldConnector, game : GameConnector) extends Wea
 	def createPellets(direction : Angle) = {
 		val dir = Vector2.fromAngle(direction)
 		// TODO: Obtain bullet spawn point external resource
-		val position = Vector2(game.player.position.x + (dir.x * .15f), game.player.position.y + (dir.y * .15f))
+		val position = game.player.position + (dir * .15f)
 		
 		// TODO: Add new bullets to the game so they update and draw, currently only in physics world
 		val newProjectiles = for{i <- 1 to 37
