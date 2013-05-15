@@ -35,6 +35,7 @@ import com.mcclellan.input.actions.Right
 import com.mcclellan.input.actions.Up
 import com.mcclellan.core.model.AssaultRifle
 import com.mcclellan.input.actions.SecondaryFire
+import com.mcclellan.core.model.Enemy
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	// FIXME: These probably don't need to be here, only a few would
@@ -58,9 +59,9 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 	val fullWorld = new World(Vector2.zero, true)
 	implicit val world = new WorldConnectorImpl(fullWorld)
 	val player : Player = new Player(Vector2(2f, 2f), Degrees(0))
-	val enemy = new Player(Vector2(1f, 1f), Degrees(0))
 
-	implicit lazy val game = GameConnector.forPlayer(player)
+	implicit lazy val game = GameState.forPlayer(player)
+	var enemies = (1 to 10).map(x => new Enemy(Vector2(1f, x / 2f)))
 	lazy val font = new BitmapFont
 	var bullets = Set[Projectile]()
 	var direction = Vector2.zero
@@ -88,10 +89,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 	}
 
 	private def update(elapsed : Float) = {
-		if (enemy.health < 1) {
-			enemy.health = 500
-			enemy.position = Vector2(Math.random().toFloat * 8, Math.random().toFloat * 8f)
-		}
+		enemies.foreach(_.update(elapsed))
 
 		// TODO: Needs to be in the player class
 		assaultRifle.update(elapsed, firing)
@@ -133,9 +131,11 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 			personTexture.setRotation(player.rotation.degrees)
 			personTexture.draw(batch)
 
-			personTexture.setPosition(enemy.position.x - .16f, enemy.position.y - .16f)
-			personTexture.setRotation(enemy.rotation.degrees)
-			personTexture.draw(batch)
+			enemies.foreach(enemy => {
+				personTexture.setPosition(enemy.position.x - .16f, enemy.position.y - .16f)
+				personTexture.setRotation(enemy.rotation.degrees - 90)
+				personTexture.draw(batch)
+			})
 		}
 
 		// TODO: Create UI object
@@ -143,7 +143,6 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 			font.draw(uiBatch, String.valueOf(Gdx.graphics.getFramesPerSecond), 10, (Gdx.graphics.getHeight - 20))
 			font.draw(uiBatch, "Bodies: " + fullWorld.getBodyCount(), 10, Gdx.graphics.getHeight() - 40)
 			font.draw(uiBatch, "Collisions: " + fullWorld.getContactCount(), 10, Gdx.graphics.getHeight() - 60)
-			font.draw(uiBatch, "Enemy: " + enemy.health, 10, Gdx.graphics.getHeight() - 80)
 			font.draw(uiBatch, "Player: " + player.health, 10, Gdx.graphics.getHeight() - 100)
 		}
 

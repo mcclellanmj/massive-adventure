@@ -51,12 +51,12 @@ class Vector2Test extends FunSpec {
 
 		it("should have an angle") {
 			val vec = new Vector2(20, 20)
-			assert(135 === vec.angle.degrees)
+			assert(45 === vec.angle.degrees)
 		}
 
 		it("should have an angle negated") {
 			val vec = new Vector2(-20, 20)
-			assert(-135 === vec.angle.degrees)
+			assert(135 === vec.angle.degrees)
 		}
 
 		it("should have a unit vector with a 1 magnitude") {

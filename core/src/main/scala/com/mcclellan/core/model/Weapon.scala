@@ -2,7 +2,7 @@ package com.mcclellan.core.model
 
 import com.mcclellan.core.physics.WorldConnector
 import com.mcclellan.core.math.Vector2
-import com.mcclellan.core.GameConnector
+import com.mcclellan.core.GameState
 import com.mcclellan.core.math.Angle
 import com.mcclellan.core.math.Degrees
 import com.mcclellan.core.implicits.VectorImplicits.toGdxVector
@@ -11,7 +11,7 @@ trait Weapon {
 	def update(elapsed:Float, isFiring:Boolean)
 }
 
-class Shotgun(implicit world : WorldConnector, game : GameConnector) extends Weapon {
+class Shotgun(implicit world : WorldConnector, game : GameState) extends Weapon {
 	private var elapsedSinceFire = Float.MaxValue
 	private var randomChaos = (Math.random() /8) - 1/16
 	
@@ -37,7 +37,7 @@ class Shotgun(implicit world : WorldConnector, game : GameConnector) extends Wea
 	}
 }
 
-class AssaultRifle(implicit world : WorldConnector, game : GameConnector) extends Weapon {
+class AssaultRifle(implicit world : WorldConnector, game : GameState) extends Weapon {
 	private var elapsedSinceFire = Float.MaxValue
 	private var timeSinceLastBurst = Float.MaxValue
 	private var bursts = 0

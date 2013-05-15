@@ -16,7 +16,7 @@ class Vector2(val x : Float, val y : Float) {
 	lazy val unary_- = Vector2(-this.x, -this.y)
 
 	lazy val magnitude = Math.sqrt((x*x + y*y)).toFloat
-	lazy val angle = Radians(Math.atan2(x, -y).toFloat)
+	lazy val angle = Radians(Math.atan2(y, x).toFloat)
 	lazy val unit = {
 		if(y == 0) Vector2(x, 0)
 		else Vector2(x/magnitude, y/magnitude)

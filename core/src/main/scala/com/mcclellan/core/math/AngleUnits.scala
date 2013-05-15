@@ -11,14 +11,17 @@ private object Conversions {
 sealed trait Angle {
 	def degrees : Float
 	def radians : Float
+	def unary_- : Angle
 }
 
 sealed case class Radians(value:Float) extends Angle {
 	lazy val degrees = Conversions.radiansToDegrees(value)
-	val radians = value 
+	val radians = value
+	def unary_- = Radians(-value)
 }
 
 sealed case class Degrees(value:Float) extends Angle {
 	val degrees = value
 	lazy val radians = Conversions.degreesToRadians(value)
+	def unary_- = Degrees(-value)
 }

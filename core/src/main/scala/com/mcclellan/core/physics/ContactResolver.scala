@@ -13,6 +13,7 @@ import com.mcclellan.core.model.MyBody
 import com.mcclellan.core.model.Wall
 import com.mcclellan.core.model.Projectile
 import scala.language.existentials
+import com.mcclellan.core.model.Enemy
 
 case class ContactHandler[T, F](code : (T, F, MutableSet[DynamicBody]) => Any)(implicit t : Manifest[T], f : Manifest[F]) {
 	private val pair = (t.runtimeClass, f.runtimeClass)
@@ -30,7 +31,7 @@ case class ContactHandler[T, F](code : (T, F, MutableSet[DynamicBody]) => Any)(i
 object Handlers {
 	lazy val wallToProjectile = ContactHandler((a : Wall, b : Projectile, queue) => queue += b)
 			
-	lazy val playerToProjectile = ContactHandler((a : Player, b : Projectile, queue) => {
+	lazy val playerToProjectile = ContactHandler((a : Enemy, b : Projectile, queue) => {
 		queue += b
 		a.health -= 1
 	})
