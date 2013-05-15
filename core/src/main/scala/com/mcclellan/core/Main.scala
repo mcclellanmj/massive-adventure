@@ -1,44 +1,41 @@
 package com.mcclellan.core
 
+import scala.collection.mutable.{ Set => MutableSet }
+
 import com.badlogic.gdx.ApplicationListener
-import com.badlogic.gdx.graphics.Texture
-import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL10
-import com.mcclellan.input.MappedInputProcessor
-import com.mcclellan.input.UserInputListener
-import com.mcclellan.input.Action
-import com.mcclellan.input.actions._
+import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.BitmapFont
-import com.mcclellan.core.model.Player
-import com.mcclellan.core.math.Vector2
 import com.badlogic.gdx.graphics.g2d.Sprite
-import com.mcclellan.core.model.Projectile
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.physics.box2d.World
-import com.badlogic.gdx.math.{ Vector2 => GdxVector }
-import com.mcclellan.core.physics.ContactResolver
-import scala.collection.mutable.{ Set => MutableSet }
-import com.mcclellan.core.model.DynamicBody
-import com.mcclellan.core.graphics.camera.ScaledOrthographicCamera
-import scala.collection.JavaConversions._
-import com.mcclellan.core.implicits.VectorImplicits._
-import com.mcclellan.core.graphics.camera.ScaledOrthographicCamera
-import com.mcclellan.core.implicits.GdxPimps._
-import com.mcclellan.core.model.Wall
-import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer
 import com.mcclellan.core.debug.Box2dRenderer
-import com.mcclellan.core.physics.WorldConnector
-import com.mcclellan.core.physics.WorldConnectorImpl
-import com.mcclellan.core.physics.Handlers
-import com.mcclellan.core.model.Shotgun
+import com.mcclellan.core.graphics.camera.ScaledOrthographicCamera
+import com.mcclellan.core.implicits.GdxPimps.toPimpedSpriteBatch
+import com.mcclellan.core.implicits.VectorImplicits.toGdxVector
 import com.mcclellan.core.math.Degrees
 import com.mcclellan.core.math.Radians
+import com.mcclellan.core.math.Vector2
+import com.mcclellan.core.model.DynamicBody
+import com.mcclellan.core.model.Player
+import com.mcclellan.core.model.Projectile
+import com.mcclellan.core.model.Shotgun
+import com.mcclellan.core.model.Wall
+import com.mcclellan.core.physics.ContactResolver
+import com.mcclellan.core.physics.Handlers
+import com.mcclellan.core.physics.WorldConnectorImpl
+import com.mcclellan.input.Action
+import com.mcclellan.input.MappedInputProcessor
+import com.mcclellan.input.UserInputListener
+import com.mcclellan.input.actions.AimAt
+import com.mcclellan.input.actions.Down
+import com.mcclellan.input.actions.Fire
+import com.mcclellan.input.actions.Left
+import com.mcclellan.input.actions.Right
+import com.mcclellan.input.actions.Up
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
-	import language.implicitConversions
-	// FIXME: Hacky, leads to hard to read code
-	implicit def booleanToInt(b : Boolean) = if (b) 1 else -1
-
 	// FIXME: These probably don't need to be here, only a few would
 	val metersPerPixel = .01f
 	lazy val personTexture : Sprite = {
@@ -57,16 +54,16 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 
 	lazy val batch : SpriteBatch = new SpriteBatch
 	lazy val uiBatch : SpriteBatch = new SpriteBatch
-	val fullWorld = new World(new GdxVector(0, 0), true)
+	val fullWorld = new World(Vector2.zero, true)
 	implicit val world = new WorldConnectorImpl(fullWorld)
 	val player : Player = new Player(Vector2(2f, 2f), Degrees(0))
 	val enemy = new Player(Vector2(1f, 1f), Degrees(0))
-	
+
 	implicit lazy val game = GameConnector.forPlayer(player)
 	lazy val font = new BitmapFont
 	var bullets = Set[Projectile]()
-	var direction = Vector2(0f, 0f)
-	var target = Vector2(0f, 0f)
+	var direction = Vector2.zero
+	var target = Vector2.zero
 	var firing = false
 	lazy val cam = new ScaledOrthographicCamera(metersPerPixel, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
 	lazy val removals : MutableSet[DynamicBody] = MutableSet()
@@ -81,8 +78,8 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		val screenWidth = Gdx.graphics.getWidth() * metersPerPixel
 		fullWorld.setWarmStarting(true)
 
-		new Wall(Vector2(0, 0), Vector2(0, screenHeight))
-		new Wall(Vector2(0, 0), Vector2(screenWidth, 0))
+		new Wall(Vector2.zero, Vector2(0, screenHeight))
+		new Wall(Vector2.zero, Vector2(screenWidth, 0))
 		new Wall(Vector2(screenWidth, 0), Vector2(screenWidth, screenHeight))
 		new Wall(Vector2(0, screenHeight), Vector2(screenWidth, screenHeight))
 
@@ -156,12 +153,15 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 	override def dispose = Unit
 
 	override def userAction(action : Action) = {
+		import language.implicitConversions
+		// FIXME: Hacky, leads to hard to read code
+		implicit def booleanToInt(b : Boolean) = if (b) 1 else -1
 		action match {
-			case Down(s) => direction += new Vector2(0, -1 * !s)
-			case Up(s) => direction += new Vector2(0, 1 * !s)
-			case Left(s) => direction += new Vector2(-1 * !s, 0)
-			case Right(s) => direction += new Vector2(1 * !s, 0)
-			case AimAt(point) => target = new Vector2(point.x, Gdx.graphics.getHeight() - point.y)
+			case Down(s) => direction += Vector2(0, -1 * !s)
+			case Up(s) => direction += Vector2(0, 1 * !s)
+			case Left(s) => direction += Vector2(-1 * !s, 0)
+			case Right(s) => direction += Vector2(1 * !s, 0)
+			case AimAt(point) => target = Vector2(point.x, Gdx.graphics.getHeight() - point.y)
 			case Fire(fired) => firing = fired
 		}
 	}
