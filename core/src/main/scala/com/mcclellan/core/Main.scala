@@ -1,7 +1,6 @@
 package com.mcclellan.core
 
 import scala.collection.mutable.{ Set => MutableSet }
-
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL10
@@ -34,6 +33,8 @@ import com.mcclellan.input.actions.Fire
 import com.mcclellan.input.actions.Left
 import com.mcclellan.input.actions.Right
 import com.mcclellan.input.actions.Up
+import com.mcclellan.core.model.AssaultRifle
+import com.mcclellan.input.actions.SecondaryFire
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	// FIXME: These probably don't need to be here, only a few would
@@ -65,9 +66,11 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 	var direction = Vector2.zero
 	var target = Vector2.zero
 	var firing = false
+	var secondaryFiring = false
 	lazy val cam = new ScaledOrthographicCamera(metersPerPixel, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
 	lazy val removals : MutableSet[DynamicBody] = MutableSet()
 	val shotgun = new Shotgun
+	val assaultRifle = new AssaultRifle
 
 	override def create = {
 		Gdx.input.setInputProcessor(processor)
@@ -76,7 +79,6 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		fullWorld.setContactListener(new ContactResolver(removals, Handlers.allHandlers))
 		val screenHeight = Gdx.graphics.getHeight() * metersPerPixel
 		val screenWidth = Gdx.graphics.getWidth() * metersPerPixel
-		fullWorld.setWarmStarting(true)
 
 		new Wall(Vector2.zero, Vector2(0, screenHeight))
 		new Wall(Vector2.zero, Vector2(screenWidth, 0))
@@ -92,7 +94,8 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		}
 
 		// TODO: Needs to be in the player class
-		shotgun.update(elapsed, firing)
+		assaultRifle.update(elapsed, firing)
+		shotgun.update(elapsed, secondaryFiring)
 
 		val force = direction.unit * .4f
 		player.body.applyForceToCenter(force.rotate(player.rotation), true)
@@ -162,7 +165,8 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 			case Left(s) => direction += Vector2(-1 * !s, 0)
 			case Right(s) => direction += Vector2(1 * !s, 0)
 			case AimAt(point) => target = Vector2(point.x, Gdx.graphics.getHeight() - point.y)
-			case Fire(fired) => firing = fired
+			case Fire(fired) => firing = fired && !secondaryFiring
+			case SecondaryFire(fired) => secondaryFiring = fired && !firing
 		}
 	}
 }
