@@ -87,7 +87,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 
 	private def update(elapsed : Float) = {
 		if (enemy.health < 1) {
-			enemy.health = 10
+			enemy.health = 500
 			enemy.position = Vector2(Math.random().toFloat * 8, Math.random().toFloat * 8f)
 		}
 
