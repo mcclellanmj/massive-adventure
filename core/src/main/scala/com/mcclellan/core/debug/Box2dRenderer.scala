@@ -11,8 +11,8 @@ import com.badlogic.gdx.physics.box2d.EdgeShape
 import com.badlogic.gdx.math.{ Vector2 => GdxVector }
 
 object Box2dRenderer {
+	val shapes = new ShapeRenderer
 	def renderWorld(world : World, cam : ScaledOrthographicCamera) = {
-		val shapes = new ShapeRenderer
 		shapes.setProjectionMatrix(cam.projectionMatrix)
 		shapes.begin(ShapeType.Line)
 		shapes.setColor(1, 1, 1, 1)
@@ -35,7 +35,6 @@ object Box2dRenderer {
 			}
 			true
 		}, cam.bounds)
-
 		shapes.end()
 	}
 }
