@@ -36,40 +36,45 @@ import com.mcclellan.input.actions.Up
 import com.mcclellan.core.model.AssaultRifle
 import com.mcclellan.input.actions.SecondaryFire
 import com.mcclellan.core.model.Enemy
+import com.mcclellan.core.model.Enemy
+
+class SpriteLoader() {
+	var loaded: Map[String, Sprite] = Map()
+	var map : Map[Class[_], Sprite] = Map()
+	def addTexture(to : Class[_], path : String) = {
+		loaded.get(path) match {
+			case Some(texture) => map += to -> texture
+			case None => {
+				val sprite = new Sprite(new Texture(Gdx.files.classpath(path)))
+				sprite.setBounds(0, 0, sprite.getWidth() * .01f, sprite.getHeight() * .01f)
+				sprite.setOrigin((sprite.getWidth() / 2), (sprite.getHeight() / 2))
+				loaded += path -> sprite
+				map += to -> sprite
+			}
+		}
+	}
+	
+	def textureFor(to : Class[_]) = {
+		map.get(to)
+	}
+}
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	// FIXME: These probably don't need to be here, only a few would
 	val metersPerPixel = .01f
-	lazy val personTexture : Sprite = {
-		val texture = new Sprite(new Texture(Gdx.files.classpath("Man.png")))
-		texture.setBounds(0, 0, 32 * metersPerPixel, 32 * metersPerPixel)
-		texture.setOrigin((texture.getWidth() / 2), (texture.getHeight() / 2))
-		texture
-	}
-
-	lazy val bulletTexture : Sprite = {
-		val bulletTexture = new Sprite(new Texture(Gdx.files.classpath("Bullet.png")))
-		bulletTexture.setBounds(0, 0, 1 * metersPerPixel, 6 * metersPerPixel)
-		bulletTexture.setOrigin(bulletTexture.getWidth() / 2f, bulletTexture.getHeight() / 2f)
-		bulletTexture
-	}
-
 	lazy val batch : SpriteBatch = new SpriteBatch
 	lazy val uiBatch : SpriteBatch = new SpriteBatch
+	lazy val spriteLoader : SpriteLoader = new SpriteLoader
 	val fullWorld = new World(Vector2.zero, true)
 	implicit val world = new WorldConnectorImpl(fullWorld)
 	val player : Player = new Player(Vector2(2f, 2f), Degrees(0))
 
-	implicit lazy val game = GameState.forPlayer(player)
-	var enemies = (1 to 10).map(x => new Enemy(Vector2(1f, x / 2f)))
+	implicit val game = GameContainer.create(player, world)
 	lazy val font = new BitmapFont
 	var bullets = Set[Projectile]()
 	var direction = Vector2.zero
 	var target = Vector2.zero
-	var firing = false
-	var secondaryFiring = false
 	lazy val cam = new ScaledOrthographicCamera(metersPerPixel, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
-	lazy val removals : MutableSet[DynamicBody] = MutableSet()
 	val shotgun = new Shotgun
 	val assaultRifle = new AssaultRifle
 
@@ -77,23 +82,31 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		Gdx.input.setInputProcessor(processor)
 		processor.game = this
 
-		fullWorld.setContactListener(new ContactResolver(removals, Handlers.allHandlers))
+		fullWorld.setContactListener(new ContactResolver(game, Handlers.allHandlers))
 		val screenHeight = Gdx.graphics.getHeight() * metersPerPixel
 		val screenWidth = Gdx.graphics.getWidth() * metersPerPixel
+		
+		player.primary = Some(new Shotgun)
+		player.secondary = Some(new AssaultRifle)
 
 		new Wall(Vector2.zero, Vector2(0, screenHeight))
 		new Wall(Vector2.zero, Vector2(screenWidth, 0))
 		new Wall(Vector2(screenWidth, 0), Vector2(screenWidth, screenHeight))
 		new Wall(Vector2(0, screenHeight), Vector2(screenWidth, screenHeight))
-
+		
+		(1 to 10).map(x => new Enemy(Vector2(1f, x / 2f))).foreach(game.addComponent(_))
+		spriteLoader.addTexture(classOf[Enemy], "Man.png")
+		spriteLoader.addTexture(classOf[Player], "Man.png")
+		spriteLoader.addTexture(classOf[Projectile], "Bullet.png")
 	}
 
 	private def update(elapsed : Float) = {
-		enemies.foreach(_.update(elapsed))
+		game.step(elapsed)
+		// enemies.foreach(_.update(elapsed))
 
 		// TODO: Needs to be in the player class
-		assaultRifle.update(elapsed, firing)
-		shotgun.update(elapsed, secondaryFiring)
+		// assaultRifle.update(elapsed, firing)
+		// shotgun.update(elapsed, secondaryFiring)
 
 		val force = direction.unit * .4f
 		player.body.applyForceToCenter(force.rotate(player.rotation), true)
@@ -104,15 +117,6 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 
 		fullWorld.step(elapsed, 2, 1)
 		cam.position = player.position
-
-		removals.foreach {
-			case x : Projectile => {
-				fullWorld.destroyBody(x.body)
-				bullets = bullets - x
-				removals.remove(x)
-			}
-		}
-
 	}
 
 	override def render = {
@@ -121,22 +125,30 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 
 		batch.setProjectionMatrix(cam.projectionMatrix)
 		batch.begin {
-			bullets.foreach(bullet0 => {
-				bulletTexture.setRotation(bullet0.rotation.degrees)
-				bulletTexture.setPosition(bullet0.position.x, bullet0.position.y)
-				bulletTexture.draw(batch)
-			})
 			// TODO: Fix magic number texture offset
+			val personTexture = spriteLoader.textureFor(player.getClass()).get
 			personTexture.setPosition(player.position.x - .16f, player.position.y - .16f)
 			personTexture.setRotation(player.rotation.degrees)
 			personTexture.draw(batch)
+			
+			game.drawables.foreach(x => spriteLoader.textureFor(x.getClass()) match {
+				case Some(sprite : Sprite) => {
+					sprite.setPosition(x.position.x - .16f, x.position.y - .16f)
+					sprite.setRotation(x.rotation.degrees - 90)
+					sprite.draw(batch)
+				}
+				case None =>
+			})
+		}
 
+			/*
 			enemies.foreach(enemy => {
 				personTexture.setPosition(enemy.position.x - .16f, enemy.position.y - .16f)
 				personTexture.setRotation(enemy.rotation.degrees - 90)
 				personTexture.draw(batch)
 			})
-		}
+			* 
+			*/
 
 		// TODO: Create UI object
 		uiBatch.begin {
@@ -164,8 +176,8 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 			case Left(s) => direction += Vector2(-1 * !s, 0)
 			case Right(s) => direction += Vector2(1 * !s, 0)
 			case AimAt(point) => target = Vector2(point.x, Gdx.graphics.getHeight() - point.y)
-			case Fire(fired) => firing = fired && !secondaryFiring
-			case SecondaryFire(fired) => secondaryFiring = fired && !firing
+			case Fire(fired) => if(fired) player.arm(player.primary) else player.disarm
+			case SecondaryFire(fired) => if(fired) player.arm(player.secondary) else player.disarm
 		}
 	}
 }

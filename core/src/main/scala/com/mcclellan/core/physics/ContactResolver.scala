@@ -8,17 +8,16 @@ import com.mcclellan.core.model.Projectile
 import com.mcclellan.core.model.Player
 import com.badlogic.gdx.physics.box2d.Manifold
 import com.badlogic.gdx.physics.box2d.ContactImpulse
-import com.mcclellan.core.model.MyBody
-import com.mcclellan.core.model.MyBody
 import com.mcclellan.core.model.Wall
 import com.mcclellan.core.model.Projectile
 import scala.language.existentials
 import com.mcclellan.core.model.Enemy
+import com.mcclellan.core.GameContainer
 
-case class ContactHandler[T, F](code : (T, F, MutableSet[DynamicBody]) => Any)(implicit t : Manifest[T], f : Manifest[F]) {
+case class ContactHandler[T, F](code : (T, F, GameContainer) => Any)(implicit t : Manifest[T], f : Manifest[F]) {
 	private val pair = (t.runtimeClass, f.runtimeClass)
 	
-	def getHandler[A, B](a : A, b : B) : Option[(MutableSet[DynamicBody]) => Any] = {
+	def getHandler[A, B](a : A, b : B) : Option[(GameContainer) => Any] = {
 		val classPair = (a.getClass(), b.getClass())
 		if (this.pair == classPair) {
 			Some(code(a.asInstanceOf[T], b.asInstanceOf[F], _))
@@ -29,24 +28,24 @@ case class ContactHandler[T, F](code : (T, F, MutableSet[DynamicBody]) => Any)(i
 }
 
 object Handlers {
-	lazy val wallToProjectile = ContactHandler((a : Wall, b : Projectile, queue) => queue += b)
+	lazy val wallToProjectile = ContactHandler((a : Wall, b : Projectile, game) => game.removeComponent(b))
 			
-	lazy val playerToProjectile = ContactHandler((a : Enemy, b : Projectile, queue) => {
-		queue += b
-		a.health -= 1
+	lazy val playerToProjectile = ContactHandler((a : Enemy, b : Projectile, game) => {
+		game.removeComponent(b)
+		a.health -= b.dmg
 	})
 	
-	lazy val wallToPlayer = ContactHandler((a:Wall, b:Player, queue) => b.health-=10)
+	lazy val wallToPlayer = ContactHandler((a:Wall, b:Player, game) => b.health-=10)
 	
 	lazy val allHandlers = Seq(wallToProjectile, playerToProjectile, wallToPlayer)
 }
 
-class ContactResolver(queue : MutableSet[DynamicBody], handlers : Seq[ContactHandler[_, _]]) extends ContactListener {
+class ContactResolver(game : GameContainer, handlers : Seq[ContactHandler[_, _]]) extends ContactListener {
 	def beginContact(contact : Contact) = {
 		val a = contact.getFixtureA.getBody.getUserData
 		val b = contact.getFixtureB.getBody.getUserData
 		handlers.foreach(_.getHandler(a, b) match {
-			case Some(code) => code(queue)
+			case Some(code) => code(game)
 			case _ =>
 		})
 	}

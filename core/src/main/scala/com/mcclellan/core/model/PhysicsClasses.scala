@@ -15,11 +15,7 @@ import com.mcclellan.core.physics.WorldConnector
 import com.mcclellan.core.math.Angle
 import com.mcclellan.core.math.Degrees
 
-trait MyBody {
-	val body : Body
-}
-
-abstract class DynamicBody extends BodyCreationListener {
+abstract class DynamicBody extends BodyCreationListener with GameComponent  {
 	protected def world : WorldConnector
 	val bodyDef = new BodyDef
 	bodyDef.`type` = BodyType.DynamicBody

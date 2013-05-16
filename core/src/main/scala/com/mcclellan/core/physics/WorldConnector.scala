@@ -7,10 +7,12 @@ import com.mcclellan.core.model.Player
 
 class WorldConnectorImpl(private val world : World) extends WorldConnector {
 	def createBody(body : BodyDef) = world.createBody(body)
-	def deleteBody(body : Body) = Unit
+	def deleteBody(body : Body) = world.destroyBody(body)
+	def step(elapsed : Float) = world.step(elapsed, 4, 1)
 }
 
 trait WorldConnector {
 	def createBody(body : BodyDef) : Body
 	def deleteBody(body : Body)
+	def step(elapsed : Float)
 }

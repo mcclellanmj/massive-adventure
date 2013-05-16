@@ -2,22 +2,22 @@ package com.mcclellan.core.model
 
 import com.mcclellan.core.physics.WorldConnector
 import com.mcclellan.core.math.Vector2
-import com.mcclellan.core.GameState
+import com.mcclellan.core.GameContainer
 import com.mcclellan.core.math.Angle
 import com.mcclellan.core.math.Degrees
 import com.mcclellan.core.implicits.VectorImplicits.toGdxVector
 
-trait Weapon {
-	def update(elapsed:Float, isFiring:Boolean)
+trait Weapon extends Updateable {
+	def update(elapsed:Float)
 }
 
-class Shotgun(implicit world : WorldConnector, game : GameState) extends Weapon {
+class Shotgun(implicit val game : GameContainer) extends Weapon {
 	private var elapsedSinceFire = Float.MaxValue
 	private var randomChaos = (Math.random() /8) - 1/16
 	
-	def update(elapsed:Float, isFiring:Boolean) = {
+	def update(elapsed:Float) = {
 		elapsedSinceFire += elapsed
-		if(isFiring && elapsedSinceFire > .7 + randomChaos) {
+		if(elapsedSinceFire > .7 + randomChaos) {
 			createPellets(game.player.rotation)
 			elapsedSinceFire = 0
 			randomChaos= (Math.random() /8) - 1/16
@@ -25,6 +25,7 @@ class Shotgun(implicit world : WorldConnector, game : GameState) extends Weapon 
 	}
 	
 	def createPellets(direction : Angle) = {
+		implicit val worldConnector = game.world
 		val dir = Vector2.fromAngle(direction)
 		// TODO: Obtain bullet spawn point external resource
 		val position = game.player.position + (dir * .15f)
@@ -32,18 +33,18 @@ class Shotgun(implicit world : WorldConnector, game : GameState) extends Weapon 
 		// TODO: Add new bullets to the game so they update and draw, currently only in physics world
 		val newProjectiles = for{i <- 1 to 37
 			rotatedVector = dir.rotate(Degrees((Math.random() * 8 - 4).toFloat))
-		} yield new Projectile(position + (rotatedVector * (Math.random().toFloat / 6f)), rotatedVector * 6)
+		} yield new Projectile(position + (rotatedVector * (Math.random().toFloat / 6f)), rotatedVector * 6, 1)
 		game.player.body.applyForceToCenter(-dir * .3f, true)
 	}
 }
 
-class AssaultRifle(implicit world : WorldConnector, game : GameState) extends Weapon {
+class AssaultRifle(implicit val game : GameContainer) extends Weapon {
 	private var elapsedSinceFire = Float.MaxValue
 	private var timeSinceLastBurst = Float.MaxValue
 	private var bursts = 0
 	private var isBursting = false
 	
-	def update(elapsed:Float, isFiring:Boolean) = {
+	def update(elapsed:Float) = {
 		if(isBursting) {
 			timeSinceLastBurst += elapsed
 			if(timeSinceLastBurst > .02) {
@@ -55,7 +56,7 @@ class AssaultRifle(implicit world : WorldConnector, game : GameState) extends We
 				bursts = 0
 			}
 			
-		} else if(isFiring && elapsedSinceFire > .4) {
+		} else if(elapsedSinceFire > .4) {
 			isBursting = true
 			elapsedSinceFire = 0
 		}
@@ -63,10 +64,11 @@ class AssaultRifle(implicit world : WorldConnector, game : GameState) extends We
 	}
 	
 	def createProjectile(direction : Angle) = {
+		implicit val worldConnector = game.world
 		val dir = Vector2.fromAngle(direction)
 		// TODO: Obtain bullet spawn point external resource
 		val position = game.player.position + (dir * .15f)
 		
-		new Projectile(position, dir.rotate(Degrees(((Math.random * 2) - 1).toFloat)) * 7)
+		new Projectile(position, dir.rotate(Degrees(((Math.random * 2) - 1).toFloat)) * 7, 15)
 	}
 }
