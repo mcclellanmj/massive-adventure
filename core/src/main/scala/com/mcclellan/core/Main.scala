@@ -89,12 +89,12 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		player.primary = Some(new Shotgun)
 		player.secondary = Some(new AssaultRifle)
 
-		new Wall(Vector2.zero, Vector2(0, screenHeight))
-		new Wall(Vector2.zero, Vector2(screenWidth, 0))
-		new Wall(Vector2(screenWidth, 0), Vector2(screenWidth, screenHeight))
-		new Wall(Vector2(0, screenHeight), Vector2(screenWidth, screenHeight))
+		new Wall(Vector2.zero, Vector2(0, 12))
+		new Wall(Vector2.zero, Vector2(12, 0))
+		new Wall(Vector2(12, 0), Vector2(12, 12))
+		new Wall(Vector2(0, 12), Vector2(12, 12))
 		
-		(1 to 10).map(x => new Enemy(Vector2(1f, x / 2f))).foreach(game.addComponent(_))
+		(1 to 100).map(x => new Enemy(Vector2((Math.random() * 12).toFloat, (Math.random() * 12).toFloat))).foreach(game.addComponent(_))
 		spriteLoader.addTexture(classOf[Enemy], "Man.png")
 		spriteLoader.addTexture(classOf[Player], "Man.png")
 		spriteLoader.addTexture(classOf[Projectile], "Bullet.png")
@@ -108,9 +108,9 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		// assaultRifle.update(elapsed, firing)
 		// shotgun.update(elapsed, secondaryFiring)
 
-		val force = direction.unit * .4f
+		val force = direction.unit * .2f
 		player.body.applyForceToCenter(force.rotate(player.rotation), true)
-		player.body.setLinearVelocity(player.body.getLinearVelocity().limit(3f))
+		player.body.setLinearVelocity(player.body.getLinearVelocity().limit(1f))
 
 		val diff = target - Vector2(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f)
 		player.rotation = Radians(Math.atan2(-diff.x, diff.y).toFloat)
@@ -133,7 +133,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 			
 			game.drawables.foreach(x => spriteLoader.textureFor(x.getClass()) match {
 				case Some(sprite : Sprite) => {
-					sprite.setPosition(x.position.x - .16f, x.position.y - .16f)
+					sprite.setPosition(x.position.x - (sprite.getWidth() * sprite.getScaleX())/ 2f, x.position.y - (sprite.getWidth() * sprite.getScaleX())/ 2f)
 					sprite.setRotation(x.rotation.degrees - 90)
 					sprite.draw(batch)
 				}

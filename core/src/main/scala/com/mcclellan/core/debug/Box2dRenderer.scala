@@ -21,8 +21,10 @@ object Box2dRenderer {
 			val body = fixture.getBody();
 			fixture.getShape() match {
 				case x : CircleShape => {
-					if (!body.isAwake()) shapes.setColor(1, 0, 0, 1) else shapes.setColor(1, 1, 0, 1)
+					/*if (!body.isAwake()) shapes.setColor(1, 0, 0, 1) else shapes.setColor(1, 1, 0, 1)
 					shapes.circle(body.getPosition.x + x.getPosition.x, body.getPosition.y + x.getPosition.y, x.getRadius(), 8)
+					* 
+					*/
 				}
 				case edge : EdgeShape => {
 					if (!body.isAwake()) shapes.setColor(1, 0, 0, 1) else shapes.setColor(1, 1, 0, 1)

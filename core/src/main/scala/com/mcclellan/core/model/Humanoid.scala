@@ -50,7 +50,7 @@ class Enemy(_position : Vector2)(implicit val world : WorldConnector, game : Gam
 	def update(elapsed : Float) {
 		if((game.player.position - position).magnitude > .5) {
 			body.applyForceToCenter((game.player.position - position).unit * .1f, true)
-			body.setLinearVelocity(body.getLinearVelocity().limit(1f))
+			body.setLinearVelocity(body.getLinearVelocity().limit(.6f))
 		}
 	}
 

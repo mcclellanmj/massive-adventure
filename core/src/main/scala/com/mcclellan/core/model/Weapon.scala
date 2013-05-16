@@ -31,9 +31,10 @@ class Shotgun(implicit val game : GameContainer) extends Weapon {
 		val position = game.player.position + (dir * .15f)
 		
 		// TODO: Add new bullets to the game so they update and draw, currently only in physics world
-		val newProjectiles = for{i <- 1 to 37
+		val newProjectiles = for{i <- 1 to 44
 			rotatedVector = dir.rotate(Degrees((Math.random() * 8 - 4).toFloat))
-		} yield new Projectile(position + (rotatedVector * (Math.random().toFloat / 6f)), rotatedVector * 6, 1)
+		} yield new Projectile(position + (rotatedVector * (Math.random().toFloat / 6f)), rotatedVector * 3, 1)
+		newProjectiles.foreach(game.addComponent(_))
 		game.player.body.applyForceToCenter(-dir * .3f, true)
 	}
 }
@@ -69,6 +70,6 @@ class AssaultRifle(implicit val game : GameContainer) extends Weapon {
 		// TODO: Obtain bullet spawn point external resource
 		val position = game.player.position + (dir * .15f)
 		
-		new Projectile(position, dir.rotate(Degrees(((Math.random * 2) - 1).toFloat)) * 7, 15)
+		game.addComponent(new Projectile(position, dir.rotate(Degrees(((Math.random * 2) - 1).toFloat)) * 4, 15))
 	}
 }

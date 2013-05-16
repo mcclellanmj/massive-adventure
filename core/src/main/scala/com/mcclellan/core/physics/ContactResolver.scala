@@ -42,12 +42,17 @@ object Handlers {
 
 class ContactResolver(game : GameContainer, handlers : Seq[ContactHandler[_, _]]) extends ContactListener {
 	def beginContact(contact : Contact) = {
-		val a = contact.getFixtureA.getBody.getUserData
-		val b = contact.getFixtureB.getBody.getUserData
-		handlers.foreach(_.getHandler(a, b) match {
-			case Some(code) => code(game)
-			case _ =>
-		})
+		val filterA = contact.getFixtureA.getFilterData
+		val filterB = contact.getFixtureB.getFilterData
+		if((filterA.maskBits & filterB.categoryBits) != 0 && (filterB.maskBits & filterA.categoryBits) != 0) {
+			val a = contact.getFixtureA.getBody.getUserData
+			val b = contact.getFixtureB.getBody.getUserData
+			
+			handlers.foreach(_.getHandler(a, b) match {
+				case Some(code) => code(game)
+				case _ =>
+			})
+		}
 	}
 	def endContact(contact : Contact) = Unit
 
