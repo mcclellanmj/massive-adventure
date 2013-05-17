@@ -1,43 +1,27 @@
 package com.mcclellan.core
 
-import scala.collection.mutable.{ Set => MutableSet }
 import com.badlogic.gdx.ApplicationListener
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.GL10
-import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.Sprite
 import com.badlogic.gdx.graphics.g2d.SpriteBatch
 import com.badlogic.gdx.physics.box2d.World
 import com.mcclellan.core.debug.Box2dRenderer
 import com.mcclellan.core.graphics.camera.ScaledOrthographicCamera
+import com.mcclellan.core.graphics.texture.SpriteLoader
 import com.mcclellan.core.implicits.GdxPimps.toPimpedSpriteBatch
 import com.mcclellan.core.implicits.VectorImplicits.toGdxVector
-import com.mcclellan.core.math.Degrees
-import com.mcclellan.core.math.Radians
-import com.mcclellan.core.math.Vector2
-import com.mcclellan.core.model.DynamicBody
-import com.mcclellan.core.model.Player
-import com.mcclellan.core.model.Projectile
-import com.mcclellan.core.model.Shotgun
-import com.mcclellan.core.model.Wall
+import com.mcclellan.core.math._
+import com.mcclellan.core.model._
 import com.mcclellan.core.physics.ContactResolver
 import com.mcclellan.core.physics.Handlers
 import com.mcclellan.core.physics.WorldConnectorImpl
 import com.mcclellan.input.Action
 import com.mcclellan.input.MappedInputProcessor
 import com.mcclellan.input.UserInputListener
-import com.mcclellan.input.actions.AimAt
-import com.mcclellan.input.actions.Down
-import com.mcclellan.input.actions.Fire
-import com.mcclellan.input.actions.Left
-import com.mcclellan.input.actions.Right
-import com.mcclellan.input.actions.Up
-import com.mcclellan.core.model.AssaultRifle
-import com.mcclellan.input.actions.SecondaryFire
-import com.mcclellan.core.model.Enemy
-import com.mcclellan.core.model.Enemy
-import com.mcclellan.core.graphics.texture.SpriteLoader
+import com.mcclellan.input.actions._
+import com.mcclellan.core.debug.ui.DebugUi
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	// FIXME: These probably don't need to be here, only a few would
@@ -45,6 +29,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 	lazy val batch : SpriteBatch = new SpriteBatch
 	lazy val uiBatch : SpriteBatch = new SpriteBatch
 	lazy val spriteLoader : SpriteLoader = new SpriteLoader
+	lazy val debugUi = new DebugUi
 	val fullWorld = new World(Vector2.zero, true)
 	implicit val world = new WorldConnectorImpl(fullWorld)
 	val player : Player = new Player(Vector2(2f, 2f), Degrees(0))
@@ -101,16 +86,10 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 				case None =>
 			})
 		}
-
-		// TODO: Create UI object
-		uiBatch.begin {
-			font.draw(uiBatch, String.valueOf(Gdx.graphics.getFramesPerSecond), 10, (Gdx.graphics.getHeight - 20))
-			font.draw(uiBatch, "Bodies: " + fullWorld.getBodyCount(), 10, Gdx.graphics.getHeight() - 40)
-			font.draw(uiBatch, "Collisions: " + fullWorld.getContactCount(), 10, Gdx.graphics.getHeight() - 60)
-			font.draw(uiBatch, "Player: " + player.health, 10, Gdx.graphics.getHeight() - 100)
-		}
+		
 
 		Box2dRenderer.renderWorld(fullWorld, cam)
+		debugUi.draw(Gdx.graphics.getRawDeltaTime(), game)
 	}
 
 	override def resize(width : Int, height : Int) = Unit
