@@ -37,27 +37,7 @@ import com.mcclellan.core.model.AssaultRifle
 import com.mcclellan.input.actions.SecondaryFire
 import com.mcclellan.core.model.Enemy
 import com.mcclellan.core.model.Enemy
-
-class SpriteLoader() {
-	var loaded: Map[String, Sprite] = Map()
-	var map : Map[Class[_], Sprite] = Map()
-	def addTexture(to : Class[_], path : String) = {
-		loaded.get(path) match {
-			case Some(texture) => map += to -> texture
-			case None => {
-				val sprite = new Sprite(new Texture(Gdx.files.classpath(path)))
-				sprite.setBounds(0, 0, sprite.getWidth() * .01f, sprite.getHeight() * .01f)
-				sprite.setOrigin((sprite.getWidth() / 2), (sprite.getHeight() / 2))
-				loaded += path -> sprite
-				map += to -> sprite
-			}
-		}
-	}
-	
-	def textureFor(to : Class[_]) = {
-		map.get(to)
-	}
-}
+import com.mcclellan.core.graphics.texture.SpriteLoader
 
 class Main(val processor : MappedInputProcessor) extends ApplicationListener with UserInputListener {
 	// FIXME: These probably don't need to be here, only a few would
@@ -71,12 +51,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 
 	implicit val game = GameContainer.create(player, world)
 	lazy val font = new BitmapFont
-	var bullets = Set[Projectile]()
-	var direction = Vector2.zero
-	var target = Vector2.zero
 	lazy val cam = new ScaledOrthographicCamera(metersPerPixel, Gdx.graphics.getWidth(), Gdx.graphics.getHeight())
-	val shotgun = new Shotgun
-	val assaultRifle = new AssaultRifle
 
 	override def create = {
 		Gdx.input.setInputProcessor(processor)
@@ -85,7 +60,7 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		fullWorld.setContactListener(new ContactResolver(game, Handlers.allHandlers))
 		val screenHeight = Gdx.graphics.getHeight() * metersPerPixel
 		val screenWidth = Gdx.graphics.getWidth() * metersPerPixel
-		
+
 		player.primary = Some(new Shotgun)
 		player.secondary = Some(new AssaultRifle)
 
@@ -93,8 +68,8 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		new Wall(Vector2.zero, Vector2(12, 0))
 		new Wall(Vector2(12, 0), Vector2(12, 12))
 		new Wall(Vector2(0, 12), Vector2(12, 12))
-		
-		(1 to 100).map(x => new Enemy(Vector2((Math.random() * 12).toFloat, (Math.random() * 12).toFloat))).foreach(game.addComponent(_))
+
+		(1 to 50).map(x => new Enemy(Vector2((Math.random() * 12).toFloat, (Math.random() * 12).toFloat))).foreach(game.addComponent(_))
 		spriteLoader.addTexture(classOf[Enemy], "Man.png")
 		spriteLoader.addTexture(classOf[Player], "Man.png")
 		spriteLoader.addTexture(classOf[Projectile], "Bullet.png")
@@ -102,20 +77,6 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 
 	private def update(elapsed : Float) = {
 		game.step(elapsed)
-		// enemies.foreach(_.update(elapsed))
-
-		// TODO: Needs to be in the player class
-		// assaultRifle.update(elapsed, firing)
-		// shotgun.update(elapsed, secondaryFiring)
-
-		val force = direction.unit * .2f
-		player.body.applyForceToCenter(force.rotate(player.rotation), true)
-		player.body.setLinearVelocity(player.body.getLinearVelocity().limit(1f))
-
-		val diff = target - Vector2(Gdx.graphics.getWidth() / 2f, Gdx.graphics.getHeight() / 2f)
-		player.rotation = Radians(Math.atan2(-diff.x, diff.y).toFloat)
-
-		fullWorld.step(elapsed, 2, 1)
 		cam.position = player.position
 	}
 
@@ -130,25 +91,16 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 			personTexture.setPosition(player.position.x - .16f, player.position.y - .16f)
 			personTexture.setRotation(player.rotation.degrees)
 			personTexture.draw(batch)
-			
+
 			game.drawables.foreach(x => spriteLoader.textureFor(x.getClass()) match {
 				case Some(sprite : Sprite) => {
-					sprite.setPosition(x.position.x - (sprite.getWidth() * sprite.getScaleX())/ 2f, x.position.y - (sprite.getWidth() * sprite.getScaleX())/ 2f)
+					sprite.setPosition(x.position.x - (sprite.getWidth() * sprite.getScaleX()) / 2f, x.position.y - (sprite.getWidth() * sprite.getScaleX()) / 2f)
 					sprite.setRotation(x.rotation.degrees - 90)
 					sprite.draw(batch)
 				}
 				case None =>
 			})
 		}
-
-			/*
-			enemies.foreach(enemy => {
-				personTexture.setPosition(enemy.position.x - .16f, enemy.position.y - .16f)
-				personTexture.setRotation(enemy.rotation.degrees - 90)
-				personTexture.draw(batch)
-			})
-			* 
-			*/
 
 		// TODO: Create UI object
 		uiBatch.begin {
@@ -171,13 +123,13 @@ class Main(val processor : MappedInputProcessor) extends ApplicationListener wit
 		// FIXME: Hacky, leads to hard to read code
 		implicit def booleanToInt(b : Boolean) = if (b) 1 else -1
 		action match {
-			case Down(s) => direction += Vector2(0, -1 * !s)
-			case Up(s) => direction += Vector2(0, 1 * !s)
-			case Left(s) => direction += Vector2(-1 * !s, 0)
-			case Right(s) => direction += Vector2(1 * !s, 0)
-			case AimAt(point) => target = Vector2(point.x, Gdx.graphics.getHeight() - point.y)
-			case Fire(fired) => if(fired) player.arm(player.primary) else player.disarm
-			case SecondaryFire(fired) => if(fired) player.arm(player.secondary) else player.disarm
+			case Down(s) => player.thrust += Vector2(0, -1 * !s)
+			case Up(s) => player.thrust += Vector2(0, 1 * !s)
+			case Left(s) => player.thrust += Vector2(-1 * !s, 0)
+			case Right(s) => player.thrust += Vector2(1 * !s, 0)
+			case AimAt(point) => player.target = Vector2(point.x, Gdx.graphics.getHeight() - point.y)
+			case Fire(fired) => if (fired) player.arm(player.primary) else player.disarm
+			case SecondaryFire(fired) => if (fired) player.arm(player.secondary) else player.disarm
 		}
 	}
 }
