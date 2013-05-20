@@ -12,10 +12,14 @@ import com.badlogic.gdx.graphics.Color
 import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.scenes.scene2d.utils.Align
 import com.mcclellan.core.GameContainer
+import com.badlogic.gdx.scenes.scene2d.utils.NinePatchDrawable
+import com.badlogic.gdx.graphics.g2d.NinePatch
+import com.badlogic.gdx.graphics.Texture
 
 class DebugUi {
 	val table = new Table()
-	table.setColor(new Color(1,1,0,1));
+	val ninePatch = new NinePatchDrawable(new NinePatch(new Texture(Gdx.files.internal("DebugBox.png")), 10, 10, 10, 10))
+	table.setBackground(ninePatch)
 	val font = new BitmapFont
 	font.setScale(1.1f)
 	val labelStyle = new LabelStyle(font, new Color(1,1,1,1))
@@ -27,7 +31,7 @@ class DebugUi {
 	table.setPosition(0, Gdx.graphics.getHeight() - 100)
 	table.padLeft(15.0f)
 	table.padTop(15.0f)
-	table.setWidth(200)
+	table.setWidth(150)
 	table.debug()
 	
 	val activeComponents = new Label("", labelStyle)
@@ -46,7 +50,5 @@ class DebugUi {
 		fpsLabel.setText("FPS: " + Gdx.graphics.getFramesPerSecond())
 		activeComponents.setText("Components: " + game.updateables.length)
 		activeDrawables.setText("Drawables: " + game.drawables.length)
-		
-		Table.drawDebug(stage)
 	}
 }
