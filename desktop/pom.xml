@@ -4,11 +4,11 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.mcclellan</groupId>
-		<artifactId>scala-diablo</artifactId>
+		<artifactId>massive-adventure</artifactId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>scala-diablo-desktop</artifactId>
+	<artifactId>massive-adventure-desktop</artifactId>
 	<packaging>jar</packaging>
 	<name>Main desktop</name>
 
@@ -62,7 +62,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.mcclellan</groupId>
-			<artifactId>scala-diablo-core</artifactId>
+			<artifactId>massive-adventure-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

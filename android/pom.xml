@@ -4,18 +4,18 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.mcclellan</groupId>
-		<artifactId>scala-diablo</artifactId>
+		<artifactId>massive-adventure</artifactId>
 		<version>1.0-SNAPSHOT</version>
 	</parent>
 
-	<artifactId>scala-diablo-android</artifactId>
+	<artifactId>massive-adventure-android</artifactId>
 	<packaging>apk</packaging>
 	<name>Main Android</name>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.mcclellan</groupId>
-			<artifactId>scala-diablo-core</artifactId>
+			<artifactId>massive-adventure-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 
